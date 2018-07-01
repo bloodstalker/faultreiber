@@ -1,2 +1,2 @@
 #!/bin/sh
-"./main.py"
+"./main.py" --targetname autowasm --outdir ./test/ --structs ./test/structs.json

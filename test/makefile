@@ -1,4 +1,4 @@
-TARGET=XXX
+TARGET=autowasm
 CC=clang
 CC?=clang
 CC_FLAGS=-fpic
