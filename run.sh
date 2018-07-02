@@ -1,2 +1,3 @@
 #!/bin/sh
-"./main.py" --targetname autowasm --outdir ./test/ --structs ./test/structs.json
+cd $(dirname $0)
+"./faultreiber.py" --targetname autowasm --outdir ./test/ --structs ./test/struct.json --datetime --structsinclude ./resources/structsinclude.h
