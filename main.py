@@ -11,6 +11,7 @@ import signal
 import sys
 from text import text
 import datetime
+import xml.etree.ElementTree
 
 def SigHandler_SIGINT(signum, frame):
     print()
@@ -27,8 +28,10 @@ class Argparser(object):
         parser.add_argument("--outdir", type=str, help="path to output dir")
         parser.add_argument("--structs", type=str, help="the structs json file")
         parser.add_argument("--structsinclude", type=str, help="the path to the header that's going to be included by structs.h before structure declarations.")
+        parser.add_argument("--xml", type=str, help="paht to the xml file")
         parser.add_argument("--dbg", action="store_true", help="debug", default=False)
         parser.add_argument("--datetime", action="store_true", help="print date and time in autogen files", default=False)
+        parser.add_argument("--inline", action="store_true", help="put all reads in sequentially", default=False)
         self.args = parser.parse_args()
 
 def dupemake(path, main_name):
@@ -53,6 +56,35 @@ class CodeGen(object):
 
     def gen_reader_funcs(self):
         pass
+
+    def read_xml(self):
+        if self.argparser.args.xml:
+            tree = xml.etree.ElementTree.parse(self.argparser.args.xml)
+            root = tree.getroot()
+            print(root.tag)
+            print(root.attrib)
+            read_tree = xml.etree.ElementTree.Element("read")
+            def_tree = xml.etree.ElementTree.Element("def")
+            for child in root:
+                print(child.tag + "--" + repr(child.attrib))
+                if child.tag == "Read":
+                    read_tree = child
+                    print(type(child))
+                if child.tag == "Definition":
+                    def_tree = child
+                    print(type(child))
+            print(read_tree.tag)
+            print(def_tree.tag)
+            read_iter = read_tree.iter(tag=None)
+            def_iter = def_tree.iter(tag=None)
+            for child in def_iter:
+                print(child.attrib)
+                for childer in child.iter(tag=None):
+                    print("\t" + childer.tag + "--" + repr(childer.attrib))
+            for child in read_iter:
+                print(child.attrib)
+                for childer in child.iter(tag=None):
+                    print("\t" + childer.tag + "--" + repr(childer.attrib))
 
     def gen_struct_header(self):
         struct_source = open(get_full_path(self.argparser.args.outdir, "structs.h"), "w")
@@ -83,6 +115,7 @@ class CodeGen(object):
         self.init()
         self.init_hook()
         self.gen_struct_header()
+        self.read_xml()
 
 # write code here
 def premain(argparser):

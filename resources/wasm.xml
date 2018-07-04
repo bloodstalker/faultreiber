@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wasm:Structure xmlns:wasm="http://www.w3.org/2001/XMLSchema">
+  <Read>
+    <Magic_Number size="4"></Magic_Number>
+    <Version size="4"></Version>
+    <Type_Section count="1" type="" isaggregate="true"></Type_Section>
+    <Import_Section count="1" type="" isaggregate="true"></Import_Section>
+    <Function_Section count="1" type="" isaggregate="true"></Function_Section>
+    <Table_Section count="1" type="" isaggregate="true"></Table_Section>
+    <Memory_Section count="1" type="" isaggregate="true"></Memory_Section>
+    <Global_Section count="1" type="" isaggregate="true"></Global_Section>
+    <Export_Section count="1" type="" isaggregate="true"></Export_Section>
+    <Start_Section count="1" type="" isaggregate="true"></Start_Section>
+    <Element_Section count="1" type="" isaggregate="true"></Element_Section>
+    <Code_Section count="1" type="" isaggregate="true"></Code_Section>
+    <Data_Section count="1" type="" isaggregate="true"></Data_Section>
+    <Custom_Section count="1" type="" isaggregate="true"></Custom_Section>
+  </Read>
+  <Definition>
+    <Init_Expr name="init_expr_t" isaggregate="true">
+      <Size name="size" encoding="leb128u" type="varuint32" count="1"></Size>
+      <Code name="code" type="char*" coutn="1"></Code>
+    </Init_Expr>
+    <Resizable_Limit name="resizable_limit_t" isaggregate="true">
+      <Flags name="flags" encoding="leb128u" type="uint8" count="1"></Flags>
+      <Initial name="initial" encoding="leb128u" type="uint32" count="1"></Initial>
+      <Maximum name="maximum" encoding="leb128u" type="uint32" count="1"></Maximum>
+    </Resizable_Limit>
+    <Global_Type name="global_type_t" isaggregate="true">
+      <Value_Type name="value_type" type="int" count="1"></Value_Type>
+      <Mutability name="mutability" encoding="leb128u" type="uint8" count="1"></Mutability>
+    </Global_Type>
+    <Table_Type name="table_type_t" isaggregate="true">
+      <Element_Type name="element_type" encoding="leb128s" type="int8" count="1"></Element_Type>
+      <Resizable_Limit count="1"></Resizable_Limit>
+    </Table_Type>
+    <Memory_Type>
+      <Resizable_Limit count="1"></Resizable_Limit>
+    </Memory_Type>
+  </Definition>
+</wasm:Structure>
