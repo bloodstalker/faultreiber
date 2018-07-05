@@ -12,6 +12,7 @@ import sys
 from text import text
 import datetime
 import xml.etree.ElementTree
+from misc import *
 
 def SigHandler_SIGINT(signum, frame):
     print()

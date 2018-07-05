@@ -3,8 +3,14 @@
   <Read>
     <Magic_Number size="4"></Magic_Number>
     <Version size="4"></Version>
-    <Type_Section count="1" type="" isaggregate="true"></Type_Section>
-    <Import_Section count="1" type="" isaggregate="true"></Import_Section>
+    <Type_Section count="1" type="" isaggregate="true">
+      <Count name="count" encoding="leb128u" type="uint32" count="1"/>
+      <Type_Section_Entry count="self::Count"/>
+    </Type_Section>
+    <Import_Section count="1" type="" isaggregate="true">
+      <Count name="count" encoding="leb128u" type="uint32" count="1"/>
+      <Entries name="entries" type="self::Import_Section_Entry" count="self::Count"/>
+    </Import_Section>
     <Function_Section count="1" type="" isaggregate="true"></Function_Section>
     <Table_Section count="1" type="" isaggregate="true"></Table_Section>
     <Memory_Section count="1" type="" isaggregate="true"></Memory_Section>
@@ -19,7 +25,7 @@
   <Definition>
     <Init_Expr name="init_expr_t" isaggregate="true">
       <Size name="size" encoding="leb128u" type="varuint32" count="1"></Size>
-      <Code name="code" type="char*" coutn="1"></Code>
+      <Code name="code" type="string" coutn="1" size="self::Size"></Code>
     </Init_Expr>
     <Resizable_Limit name="resizable_limit_t" isaggregate="true">
       <Flags name="flags" encoding="leb128u" type="uint8" count="1"></Flags>
@@ -34,8 +40,28 @@
       <Element_Type name="element_type" encoding="leb128s" type="int8" count="1"></Element_Type>
       <Resizable_Limit count="1"></Resizable_Limit>
     </Table_Type>
-    <Memory_Type>
+    <Memory_Type name="memory_type_t" isaggregate="true">
       <Resizable_Limit count="1"></Resizable_Limit>
     </Memory_Type>
+    <Type_Section_Entry name="W_Type_Section_Entry" isaggregate="true">
+      <Form name="form" encoding="leb128s" type="int8" count="1"/>
+      <Param_Count name="param_count" encoding="leb128s" type="uint32" count="1"/>
+      <Param_Types name="param_types" encoding="leb128s" type="int8" count="self::Param_Count"/>
+      <Return_Count name="return_count" encoding="leb128u" type="uint8"/>
+      <Return_Types name="return_types" encoding="leb128s" type="int8"/>
+    </Type_Section_Entry>
+    <Import_Section_Entry name="W_Import_Section_Entry" isaggregate="true">
+      <Module_Length name="module_length" encoding="leb128u" type="uint32" count="1"/>
+      <Module_Str name="module_str" type="string" count="1" size="self::Module_Length"/>
+      <Field_Len name="field_len" encoding="leb128u" type="uint32" couny="1"/>
+      <Field_Str name="field_str" type="string" count="1" size="self::Field_Len"/>
+      <Kind name="kind" encoding="leb128u" type="uint8" count="1"/>
+      <Type name="type" conditional="true" condition="self::Kind">
+        <condition0 encoding="leb128u" type="uint32">0</condition0>
+        <condition1 type="Table_Type">1</condition1>
+        <condition2 type="Memory_Type">2</condition2>
+        <condition3 type="Global_Type">3</condition3>
+      </Type>
+    </Import_Section_Entry>
   </Definition>
 </wasm:Structure>
