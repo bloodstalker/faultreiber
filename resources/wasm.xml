@@ -11,13 +11,33 @@
       <Count name="count" encoding="leb128u" type="uint32" count="1"/>
       <Entries name="entries" type="self::Import_Section_Entry" count="self::Count"/>
     </Import_Section>
-    <Function_Section count="1" type="" isaggregate="true"></Function_Section>
-    <Table_Section count="1" type="" isaggregate="true"></Table_Section>
-    <Memory_Section count="1" type="" isaggregate="true"></Memory_Section>
-    <Global_Section count="1" type="" isaggregate="true"></Global_Section>
-    <Export_Section count="1" type="" isaggregate="true"></Export_Section>
-    <Start_Section count="1" type="" isaggregate="true"></Start_Section>
-    <Element_Section count="1" type="" isaggregate="true"></Element_Section>
+    <Function_Section count="1" type="" isaggregate="true">
+      <Count name="count" encoding="leb128u" type="uint32" count="1"/>
+      <Types name="types" encoding="leb128u" type="uint32" count="self::Count"/>
+    </Function_Section>
+    <Table_Section count="1" type="" isaggregate="true">
+      <Count name="count" encoding="leb128u" type="uint32" count="1"/>
+      <Entries name="entries" type="self::Table_Type" count="self::Count"/>
+    </Table_Section>
+    <Memory_Section count="1" type="" isaggregate="true">
+      <Count name="count" encoding="leb128u" type="uint32" count="1"/>
+      <Entries name="entries" type="self::Memory_Type" count="self::Count"/>
+    </Memory_Section>
+    <Global_Section count="1" type="" isaggregate="true">
+      <Count name="count" encoding="leb128u" type="uint32" count="1"/>
+      <Globals name="globals" type="this::Global_Entry" count="self::Count"/>
+    </Global_Section>
+    <Export_Section count="1" type="" isaggregate="true">
+      <Count name="count" encoding="leb128u" type="uint32" count="1"/>
+      <Entries name="entries" type="self::Export_Entry" count="self::Count"/>
+    </Export_Section>
+    <Start_Section count="1" type="" isaggregate="true">
+      <Index name="index" encoding="leb128u" type="uint32" count="1"/>
+    </Start_Section>
+    <Element_Section count="1" type="" isaggregate="true">
+      <Count name="count" encoding="leb128u" type="uint32" count="1"/>
+      <Entries name="entries" type="self::Element_Segment" count="self::Count"/>
+    </Element_Section>
     <Code_Section count="1" type="" isaggregate="true"></Code_Section>
     <Data_Section count="1" type="" isaggregate="true"></Data_Section>
     <Custom_Section count="1" type="" isaggregate="true"></Custom_Section>
@@ -63,5 +83,21 @@
         <condition3 type="Global_Type">3</condition3>
       </Type>
     </Import_Section_Entry>
+    <Global_Entry name="global_type_t" isaggregate="true">
+      <Global_Type name="type" type="self::Global_Type" count="1"/>
+      <Init name="init" type="self::Init_Expr" count="1"/>
+    </Global_Entry>
+    <Export_Entry name="W_Export_Entry" isaggregate="true">
+      <Field_Len name="field_len" encoding="leb128u" type="uint32" count="1"/>
+      <Field_Str name="field_str" encoding="leb128u" type="string" count="1" size="self::Field_Len"/>
+      <Kind name="kind" encoding="leb128u" type="uint8" count="1"/>
+      <Index name="index" encoding="leb128u" type="uint32" count="1"/>
+    </Export_Entry>
+    <Element_Segment name="W_Element_Segment" isaggregate="true">
+      <Index name="index" encoding="leb128u" type="uint32" count="1"/>
+      <Init name="init" type="self::Init_Expr" count="1"/>
+      <Num_Length name="num_length" encoding="leb128u" type="uint32" count="1"/>
+      <Elems name="elems" encoding="leb128u" type="uint32" count="self::Num_Length"/>
+    </Element_Segment>
   </Definition>
 </wasm:Structure>
