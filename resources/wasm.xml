@@ -38,8 +38,14 @@
       <Count name="count" encoding="leb128u" type="uint32" count="1"/>
       <Entries name="entries" type="self::Element_Segment" count="self::Count"/>
     </Element_Section>
-    <Code_Section count="1" type="" isaggregate="true"></Code_Section>
-    <Data_Section count="1" type="" isaggregate="true"></Data_Section>
+    <Code_Section count="1" type="" isaggregate="true">
+      <Count name="count" encoding="leb128u" type="uint32" count="1"/>
+      <Bodies name="bodies" type="self::Function_Body" count="self::Count"/>
+    </Code_Section>
+    <Data_Section count="1" type="" isaggregate="true">
+      <Count name="count" encoding="leb128u" type="uint32" count="1"/>
+      <Entries name="entries" type="self::Data_Segment" count="self::Count"/>
+    </Data_Section>
     <Custom_Section count="1" type="" isaggregate="true"></Custom_Section>
   </Read>
   <Definition>
@@ -99,5 +105,21 @@
       <Num_Length name="num_length" encoding="leb128u" type="uint32" count="1"/>
       <Elems name="elems" encoding="leb128u" type="uint32" count="self::Num_Length"/>
     </Element_Segment>
+    <Local_Entry name="W_Local_Entry" isaggregate="true">
+      <Count name="count" encoding="leb128u" type="uint32" count="1"/>
+      <Type name="type" encoding="leb128u" type="int16" count="self::Count"/>
+    </Local_Entry>
+    <Function_Body name="W_Function_Body" isaggregate="true">
+      <Body_size name="body_size" encoding="leb128u" type="uint32" count="1"/>
+      <Local_Count name="local_count" encoding="leb128u" type="uint32" count="1"/>
+      <Local_Entries name="locals" type="Local_Entry" count="self::Local_Count"/>
+      <Code name="code" type="uchar" count="self::Body_size"/>
+    </Function_Body>
+    <Data_Segment>
+      <Index name="index" encoding="leb128u" type="uint32" count="1"/>
+      <Offset name="offset" type="self::Init_Expr" count="1"/>
+      <Size name="size" encoding="leb128u" type="uint32" count="1"/>
+      <Data name="data" type="uchar" count="self::Size"/>
+    </Data_Segment>
   </Definition>
 </wasm:Structure>
