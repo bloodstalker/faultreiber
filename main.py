@@ -14,6 +14,50 @@ import datetime
 import xml.etree.ElementTree
 from misc import *
 
+def type_resolver(elem, elem_list):
+    type_str = elem.attrib["type"]
+    type_name = elem.attrib["name"]
+    if type_str == "int8":
+        return "int8_t"
+    elif type_str == "uint8":
+        return "uint8_t"
+    elif type_str == "int16":
+        return "int16_t"
+    elif type_str == "uint16":
+        return "uint16_t"
+    elif type_str == "int32":
+        return "int32_t"
+    elif type_str == "uint32":
+        return "uint32_t"
+    elif type_str == "int64":
+        return "int64_t"
+    elif type_str == "uint64":
+        return "uint64_t"
+    elif type_str == "int128":
+        return "int128_t"
+    elif type_str == "uint128":
+        return "uint128_t"
+    elif type_str == "float":
+        return "float"
+    elif type_str == "double":
+        return "double"
+    elif type_str == "bool":
+        return "unsigned char"
+    elif type_str == "uchar":
+        return "unsigned char"
+    elif type_str == "schar":
+        return "signed char"
+    elif type_str == "string":
+        return "char*"
+    elif type_str == "FT::conditional":
+        return "void*"
+    elif type_str.find("self::") == 0:
+        for node in elem_list:
+            if elem.attrib["type"][6:] == node.tag:
+                print(node.tag)
+                return node.attrib["name"]
+    else: return type_str
+
 def SigHandler_SIGINT(signum, frame):
     print()
     sys.exit(0)
@@ -33,6 +77,7 @@ class Argparser(object):
         parser.add_argument("--dbg", action="store_true", help="debug", default=False)
         parser.add_argument("--datetime", action="store_true", help="print date and time in autogen files", default=False)
         parser.add_argument("--inline", action="store_true", help="put all reads in sequentially", default=False)
+        parser.add_argument("--verbose", action="store_true", help="verbose", default=False)
         self.args = parser.parse_args()
 
 def dupemake(path, main_name):
@@ -48,6 +93,7 @@ class CodeGen(object):
         self.argparser = argparser
         self.struct_json = json.load(open(self.argparser.args.structs))
         self.dnt = datetime.datetime.now().isoformat()
+        self.elems = []
 
     def init_hook(self):
         pass
@@ -60,32 +106,37 @@ class CodeGen(object):
 
     def read_xml(self):
         if self.argparser.args.xml:
+            def_header = open(self.argparser.args.outdir + "/defines.h", "w")
+            def_header.write(text.header_inttype + "\n")
             tree = xml.etree.ElementTree.parse(self.argparser.args.xml)
             root = tree.getroot()
-            print(root.tag)
-            print(root.attrib)
             read_tree = xml.etree.ElementTree.Element("read")
             def_tree = xml.etree.ElementTree.Element("def")
             for child in root:
                 print(child.tag + "--" + repr(child.attrib))
                 if child.tag == "Read":
                     read_tree = child
-                    print(type(child))
                 if child.tag == "Definition":
                     def_tree = child
-                    print(type(child))
-            print(read_tree.tag)
-            print(def_tree.tag)
             read_iter = read_tree.iter(tag=None)
             def_iter = def_tree.iter(tag=None)
             for child in def_iter:
-                print(child.attrib)
-                for childer in child.iter(tag=None):
-                    print("\t" + childer.tag + "--" + repr(childer.attrib))
+                self.elems.append(child)
+                if "isaggregate" in child.attrib:
+                    def_header.write("typedef struct {\n")
+                    for childerer in child:
+                        c_type = type_resolver(childerer, self.elems)
+                        def_header.write("\t" + c_type + " " + childerer.attrib["name"] + ";\n")
+                    def_header.write("}" + child.attrib["name"] + ";\n\n")
             for child in read_iter:
-                print(child.attrib)
-                for childer in child.iter(tag=None):
-                    print("\t" + childer.tag + "--" + repr(childer.attrib))
+                self.elems.append(child)
+                if "isaggregate" in child.attrib:
+                    def_header.write("typedef struct {\n")
+                    for childerer in child:
+                        print(childerer.tag)
+                        c_type = type_resolver(childerer, self.elems)
+                        def_header.write("\t" + c_type + " " + childerer.attrib["name"] + ";\n")
+                    def_header.write("}" + child.attrib["name"] + ";\n\n")
 
     def gen_struct_header(self):
         struct_source = open(get_full_path(self.argparser.args.outdir, "structs.h"), "w")
