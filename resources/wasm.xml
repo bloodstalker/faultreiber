@@ -25,7 +25,7 @@
     </Memory_Section>
     <Global_Section name="W_Global_Section" count="1" type="" isaggregate="true">
       <Count name="count" encoding="leb128u" type="uint32" count="1"/>
-      <Globals name="globals" type="this::Global_Entry" count="self::Count"/>
+      <Globals name="globals" type="self::Global_Entry" count="self::Count"/>
     </Global_Section>
     <Export_Section name="W_Export_Section" count="1" type="" isaggregate="true">
       <Count name="count" encoding="leb128u" type="uint32" count="1"/>

@@ -14,6 +14,7 @@ import datetime
 import xml.etree.ElementTree
 from misc import *
 
+# TODO-doesnt support non-byte-sized reads
 def type_resolver(elem, elem_list):
     type_str = elem.attrib["type"]
     type_name = elem.attrib["name"]
@@ -54,9 +55,16 @@ def type_resolver(elem, elem_list):
     elif type_str.find("self::") == 0:
         for node in elem_list:
             if elem.attrib["type"][6:] == node.tag:
-                print(node.tag)
                 return node.attrib["name"]
     else: return type_str
+
+def get_def_node(type_str, elem_list):
+    for node in elem_list:
+        if type_str == node.attrib["name"]:
+            return node
+
+def reader_generator(elem, elem_list):
+    pass
 
 def SigHandler_SIGINT(signum, frame):
     print()
@@ -94,6 +102,10 @@ class CodeGen(object):
         self.struct_json = json.load(open(self.argparser.args.structs))
         self.dnt = datetime.datetime.now().isoformat()
         self.elems = []
+        self.def_elems = []
+        self.read_elems = []
+        self.read_iter = []
+        self.def_iter = []
 
     def init_hook(self):
         pass
@@ -101,8 +113,37 @@ class CodeGen(object):
     def init(self):
         dupemake(self.argparser.args.outdir, self.argparser.args.targetname)
 
+    def dump_elems(self):
+        for elem in self.elems:
+            print("XXXX " + elem.tag)
+            print(elem.attrib)
+
+    def dump_def_elems(self):
+        for elem in self.def_elems:
+            print("XXXX " + elem.tag)
+            print(elem.attrib)
+
+    def dump_read_elems(self):
+        for elem in self.read_elems:
+            print("XXXX " + elem.tag)
+            print(elem.attrib)
+
     def gen_reader_funcs(self):
-        pass
+        read_source = open(self.argparser.args.outdir + "/read.c", "w")
+        read_source.write(text.header_list)
+        for elem in self.read_elems:
+            read_source.write(text.c_read_elem_sig.replace("YYY", elem.attrib["name"]).replace("XXX", elem.attrib["name"]))
+            read_source.write(text.c_function_dummy_dec.replace("XXX", elem.attrib["name"]))
+            if "isaggregate" in elem.attrib:
+                for child in elem:
+                    ref_node_name = type_resolver(child, self.def_elems)
+                    ref_node = get_def_node(ref_node_name, self.def_elems)
+                    if ref_node:
+                        read_source.write(text.c_read_elem_sig_1.replace("XXX", ref_node.attrib["name"]) + ";\n")
+            else:
+                read_source.write(type_resolver(elem, self.elems) + " " + elem.attrib["name"] + ";\n")
+            read_source.write(text.c_function_return_type)
+            read_source.write(text.c_function_close + "\n")
 
     def read_xml(self):
         if self.argparser.args.xml:
@@ -113,13 +154,18 @@ class CodeGen(object):
             read_tree = xml.etree.ElementTree.Element("read")
             def_tree = xml.etree.ElementTree.Element("def")
             for child in root:
-                print(child.tag + "--" + repr(child.attrib))
                 if child.tag == "Read":
                     read_tree = child
                 if child.tag == "Definition":
                     def_tree = child
+            for child in read_tree:
+                self.read_elems.append(child)
+            for child in def_tree:
+                self.def_elems.append(child)
             read_iter = read_tree.iter(tag=None)
             def_iter = def_tree.iter(tag=None)
+            self.read_iter = read_iter
+            self.def_iter = def_iter
             for child in def_iter:
                 self.elems.append(child)
                 if "isaggregate" in child.attrib:
@@ -133,7 +179,6 @@ class CodeGen(object):
                 if "isaggregate" in child.attrib:
                     def_header.write("typedef struct {\n")
                     for childerer in child:
-                        print(childerer.tag)
                         c_type = type_resolver(childerer, self.elems)
                         def_header.write("\t" + c_type + " " + childerer.attrib["name"] + ";\n")
                     def_header.write("}" + child.attrib["name"] + ";\n\n")
@@ -168,6 +213,10 @@ class CodeGen(object):
         self.init_hook()
         self.gen_struct_header()
         self.read_xml()
+        self.gen_reader_funcs()
+        #self.dump_def_elems()
+        #print("")
+        #self.dump_read_elems()
 
 # write code here
 def premain(argparser):
