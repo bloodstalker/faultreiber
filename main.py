@@ -131,6 +131,25 @@ class CodeGen(object):
     def gen_reader_funcs(self):
         read_source = open(self.argparser.args.outdir + "/read.c", "w")
         read_source.write(text.header_list)
+        for elem in self.def_elems:
+            read_source.write(text.c_read_elem_sig.replace("YYY", elem.attrib["name"]).replace("XXX", elem.attrib["name"]))
+            read_source.write(text.c_function_dummy_dec.replace("XXX", elem.attrib["name"]))
+            if "isaggregate" in elem.attrib:
+                for child in elem:
+                    ref_node_name = type_resolver(child, self.def_elems)
+                    ref_node = get_def_node(ref_node_name, self.def_elems)
+                    if ref_node:
+                        read_source.write(ref_node.attrib["name"] + " " + ref_node.attrib["name"] + "_ins" + "=")
+                        read_source.write(text.c_read_elem_sig_1.replace("XXX", ref_node.attrib["name"]) + ";\n")
+                        read_source.write("dummy." + child.attrib["name"] + "=" +ref_node.attrib["name"]+"_ins" + ";\n")
+                    else:
+                        read_source.write(ref_node_name + " " + ref_node_name+"_ins" + ";\n")
+                        read_source.write(text.c_read_gen.replace("XXX", ref_node_name+"_ins").replace("YYY", ref_node_name))
+                        read_source.write("dummy." + child.attrib["name"] + "=" +ref_node_name+"_ins" + ";\n")
+            else:
+                read_source.write(type_resolver(elem, self.elems) + " " + elem.attrib["name"] + ";\n")
+            read_source.write(text.c_function_return_type)
+            read_source.write(text.c_function_close + "\n")
         for elem in self.read_elems:
             read_source.write(text.c_read_elem_sig.replace("YYY", elem.attrib["name"]).replace("XXX", elem.attrib["name"]))
             read_source.write(text.c_function_dummy_dec.replace("XXX", elem.attrib["name"]))
@@ -139,7 +158,13 @@ class CodeGen(object):
                     ref_node_name = type_resolver(child, self.def_elems)
                     ref_node = get_def_node(ref_node_name, self.def_elems)
                     if ref_node:
+                        read_source.write(ref_node.attrib["name"] + " " + ref_node.attrib["name"] + "_ins" + "=")
                         read_source.write(text.c_read_elem_sig_1.replace("XXX", ref_node.attrib["name"]) + ";\n")
+                        read_source.write("dummy." + child.attrib["name"] + "=" +ref_node.attrib["name"]+"_ins" + ";\n")
+                    else:
+                        read_source.write(ref_node_name + " " + ref_node_name+"_ins" + ";\n")
+                        read_source.write(text.c_read_gen.replace("XXX", ref_node_name+"_ins").replace("YYY", ref_node_name))
+                        read_source.write("dummy." + child.attrib["name"] + "=" +ref_node_name+"_ins" + ";\n")
             else:
                 read_source.write(type_resolver(elem, self.elems) + " " + elem.attrib["name"] + ";\n")
             read_source.write(text.c_function_return_type)
