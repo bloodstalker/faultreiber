@@ -90,6 +90,16 @@ def get_elem_count(elem, elems):
     else:
         return 1
 
+def get_elem_size(elem, elems):
+    if "size" in elem.attrib:
+        try:
+            if str(int(elem.attrib["size"])) == elem.attrib["size"]:
+                return int(elem.attrib["size"])
+        except ValueError:
+            return -1
+    else:
+        return 0
+
 class Argparser(object):
     def __init__(self):
         parser = argparse.ArgumentParser()
@@ -163,6 +173,14 @@ class CodeGen(object):
                         child_count = get_elem_count(child, self.def_elems + self.read_elems)
                         ref_node_name = type_resolver(child, self.def_elems)
                         ref_node = get_def_node(ref_node_name, self.def_elems)
+                        size = get_elem_size(child, self.def_elems + self.read_elems)
+                        read_size_replacement = str()
+                        if size > 0:
+                            read_size_replacement = str(size)
+                        if size == -1:
+                            ref_size = child.attrib["size"][6:]
+                            for child2 in elem:
+                                if child2.tag == ref_size : read_size_replacement = "dummy." + child2.attrib["name"]
                         if ref_node:
                             ref_node_name = pointer_remover(ref_node.attrib["name"])
                             for_dummy_declare = ref_node.attrib["name"] + " " + ref_node_name + "_ins" + "="
@@ -183,7 +201,11 @@ class CodeGen(object):
                                     read_source.write(text.simple_loop.replace("YYY", for_dummy_declare+for_read+for_dummy_assign).replace("XXX", replacement))
                         else:
                             for_dummy_declare = ref_node_name + " " + pointer_remover(ref_node_name)+"_ins" + ";\n"
-                            for_read = text.c_read_gen.replace("XXX", pointer_remover(ref_node_name)+"_ins").replace("YYY", pointer_remover(ref_node_name))
+                            for_read = str()
+                            if "size" in child.attrib:
+                                for_read = text.c_read_gen_2.replace("XXX", pointer_remover(ref_node_name)+"_ins").replace("YYY", read_size_replacement)
+                            else:
+                                for_read = text.c_read_gen.replace("XXX", pointer_remover(ref_node_name)+"_ins").replace("YYY", pointer_remover(ref_node_name))
                             if child_count == 1:
                                 for_dummy_assign = "dummy." + child.attrib["name"] + "=" +pointer_remover(ref_node_name)+"_ins" + ";\n"
                                 read_source.write(for_dummy_declare+for_read+for_dummy_assign)
@@ -245,6 +267,34 @@ class CodeGen(object):
                         def_header.write("\t" + c_type + " " + childerer.attrib["name"] + ";\n")
                     def_header.write("}" + child.attrib["name"] + ";\n\n")
 
+    def gen_struct_header_xml(self):
+        struct_source = open(get_full_path(self.argparser.args.outdir, "structs.h"), "w")
+        struct_source_c = open(get_full_path(self.argparser.args.outdir, "structs.c"), "w")
+        struct_source_c.write('#include "structs.h"')
+        struct_source.write(text.pre_header_guard)
+        struct_source.write(text.autogen_warning)
+        if self.argparser.args.datetime: struct_source.write("// " + self.dnt + "\n")
+        struct_source.write(text.header_guard_begin.replace("XXX", "structs".upper()))
+        struct_source.write(text.header_inttype)
+        if self.argparser.args.structsinclude:
+            copy(self.argparser.args.structsinclude, self.argparser.args.outdir)
+            pos = self.argparser.args.structsinclude.rfind("/")
+            sub = self.argparser.args.structsinclude[pos+1:]
+            struct_source.write('#include "' + sub + '"\n')
+        for child in self.def_elems + self.read_elems:
+            struct_source.write("typedef struct {\n")
+            for childer in child:
+                ref_type = type_resolver(childer, self.def_elems + self.read_elems)
+                def_node = get_def_node(ref_type, self.def_elems + self.read_elems)
+                if def_node:
+                    struct_source.write(ref_type + " " + childer.attrib["name"] + ";\n")
+                else:
+                    struct_source.write(ref_type + " " + childer.attrib["name"] + ";\n")
+            struct_source.write("}" + child.attrib["name"] + ";\n\n")
+        struct_source.write(text.pragma_endif)
+        struct_source.write(text.last_comment)
+
+
     def gen_struct_header(self):
         struct_source = open(get_full_path(self.argparser.args.outdir, "structs.h"), "w")
         struct_source_c = open(get_full_path(self.argparser.args.outdir, "structs.c"), "w")
@@ -273,9 +323,10 @@ class CodeGen(object):
     def run(self):
         self.init()
         self.init_hook()
-        self.gen_struct_header()
+        #self.gen_struct_header()
         self.read_xml()
         self.gen_reader_funcs()
+        self.gen_struct_header_xml()
         #self.dump_def_elems()
         #print("")
         #self.dump_read_elems()

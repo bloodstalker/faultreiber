@@ -26,5 +26,6 @@ class text():
     c_read_4 = "read(_fd, &XXX, sizeof(uint32_t));\n"
     c_read_8 = "read(_fd, &XXX, sizeof(uint64_t));\n"
     c_read_gen = "read(_fd, &XXX, sizeof(YYY));\n"
+    c_read_gen_2 = "read(_fd, &XXX, YYY);\n"
     c_assign_struct = "XXX.YYY = ZZZ;\n"
     simple_loop = "for (int i = 0; i < XXX; ++i) {\nYYY}\n"
