@@ -82,21 +82,15 @@ def get_full_path(path, name):
 
 def get_elem_count(elem, elems):
     if "count" in elem.attrib:
-        print(elem.attrib["count"])
+        #print(elem.attrib["count"])
         try:
             if str(int(elem.attrib["count"])) == elem.attrib["count"]:
                 return int(elem.attrib["count"])
         except ValueError:
+            #print(elem.attrib["count"][6:])
             return -1
     else:
         return 1
-
-def gen_count_reader(source_file, elem, elems):
-    count_simple = get_elem_count(elem, elems)
-    if count_simple > -1:
-        return True,count_simple
-    else:
-        return False,-1
 
 class Argparser(object):
     def __init__(self):
@@ -178,8 +172,17 @@ class CodeGen(object):
                                 for_dummy_assign = "dummy." + child.attrib["name"] + "=" +ref_node_name+"_ins" + ";\n"
                                 read_source.write(for_dummy_declare+for_read+for_dummy_assign)
                             else:
-                                for_dummy_assign = "dummy." + child.attrib["name"] + "[i]" + "=" +ref_node_name+"_ins" + ";\n"
-                                read_source.write(text.simple_loop.replace("YYY", for_dummy_declare+for_read+for_dummy_assign))
+                                if child_count > 1:
+                                    for_dummy_assign = "dummy." + child.attrib["name"] + "[i]" + "=" +ref_node_name+"_ins" + ";\n"
+                                    read_source.write(text.simple_loop.replace("YYY", for_dummy_declare+for_read+for_dummy_assign))
+                                if child_count == -1:
+                                    replacement = str()
+                                    count_name_str = child.attrib["count"][6:]
+                                    for child2 in elem:
+                                        if child2.tag == count_name_str: replacement = "dummy." + child2.attrib["name"]
+                                    print(count_name_str)
+                                    for_dummy_assign = "dummy." + child.attrib["name"] + "[i]" + "=" +ref_node_name+"_ins" + ";\n"
+                                    read_source.write(text.simple_loop.replace("YYY", for_dummy_declare+for_read+for_dummy_assign).replace("XXX", replacement))
                         else:
                             for_dummy_declare = ref_node_name + " " + pointer_remover(ref_node_name)+"_ins" + ";\n"
                             for_read = text.c_read_gen.replace("XXX", pointer_remover(ref_node_name)+"_ins").replace("YYY", pointer_remover(ref_node_name))
@@ -187,8 +190,17 @@ class CodeGen(object):
                                 for_dummy_assign = "dummy." + child.attrib["name"] + "=" +pointer_remover(ref_node_name)+"_ins" + ";\n"
                                 read_source.write(for_dummy_declare+for_read+for_dummy_assign)
                             else:
-                                for_dummy_assign = "dummy." + child.attrib["name"] + "[i]" + "=" +pointer_remover(ref_node_name)+"_ins" + ";\n"
-                                read_source.write(text.simple_loop.replace("YYY", for_dummy_declare+for_read+for_dummy_assign))
+                                if child_count > 1:
+                                    for_dummy_assign = "dummy." + child.attrib["name"] + "[i]" + "=" +pointer_remover(ref_node_name)+"_ins" + ";\n"
+                                    read_source.write(text.simple_loop.replace("YYY", for_dummy_declare+for_read+for_dummy_assign))
+                                if child_count == -1:
+                                    replacement = str()
+                                    count_name_str = child.attrib["count"][6:]
+                                    for child2 in elem:
+                                        if child2.tag == count_name_str: replacement = "dummy." + child2.attrib["name"]
+                                    print(count_name_str)
+                                    for_dummy_assign = "dummy." + child.attrib["name"] + "[i]" + "=" +pointer_remover(ref_node_name)+"_ins" + ";\n"
+                                    read_source.write(text.simple_loop.replace("YYY", for_dummy_declare+for_read+for_dummy_assign).replace("XXX", replacement))
                 else:
                     pass
             else:
