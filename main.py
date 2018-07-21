@@ -286,11 +286,14 @@ class CodeGen(object):
         if self.argparser.args.datetime: struct_source.write("// " + self.dnt + "\n")
         struct_source.write(text.header_guard_begin.replace("XXX", "structs".upper()))
         struct_source.write(text.header_inttype)
+        struct_source.write(text.c_read_leb_u_def + "\n")
+        struct_source.write(text.c_read_leb_s_def + "\n")
+        struct_source.write(text.c_read_leb_macro_defs + "\n")
         if self.argparser.args.structsinclude:
             copy(self.argparser.args.structsinclude, self.argparser.args.outdir)
             pos = self.argparser.args.structsinclude.rfind("/")
             sub = self.argparser.args.structsinclude[pos+1:]
-            struct_source.write('#include "' + sub + '"\n')
+            struct_source.write('#include "' + sub + '"\n\n')
         for child in self.def_elems + self.read_elems:
             struct_source.write("typedef struct {\n")
             for childer in child:
@@ -307,7 +310,6 @@ class CodeGen(object):
             struct_source.write("}" + child.attrib["name"] + ";\n\n")
         struct_source.write(text.pragma_endif)
         struct_source.write(text.last_comment)
-
 
     def gen_struct_header(self):
         struct_source = open(get_full_path(self.argparser.args.outdir, "structs.h"), "w")

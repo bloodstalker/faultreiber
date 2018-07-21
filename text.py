@@ -29,3 +29,50 @@ class text():
     c_read_gen_2 = "read(_fd, &XXX, YYY);\n"
     c_assign_struct = "XXX.YYY = ZZZ;\n"
     simple_loop = "for (int i = 0; i < XXX; ++i) {\nYYY}\n"
+    c_read_leb_u_def = """
+uint64_t read_leb128_u(int _fd, int max_size) {
+  uint8_t read_bytes = 0U;
+  uint8_t byte = 0;
+  uint64_t result = 0U;
+  uint32_t shift = 0U;
+  do {
+    read(_fd, &byte, 1);read_bytes++;read_bytes++;
+    result |= (byte & 0x7f) << shift;
+    shift += 7;
+  } while(((byte & 0x80) != 0) && (read_bytes < max_size));
+  return result;
+}"""
+
+    c_read_leb_s_def = """
+int64_t read_leb128_s(int _fd, int max_size) {
+  uint8_t byte;
+  uint8_t read_bytes = 0U;
+  uint8_t last_byte;
+  int64_t result = 0;
+  uint32_t shift = 0U;
+  read(_fd, &byte, 1);
+  do {
+    read(_fd, &byte, 1);read_bytes++;
+    result |= (byte & 0x7f) << shift;
+    last_byte = byte;
+    shift += 7;
+  } while(((byte & 0x80) != 0) && read_bytes < max_size);
+  if ((last_byte & 0x40) != 0) result |= -(1 << shift);
+  return result;
+}"""
+
+    c_read_leb_macro_defs = """
+#define READ_VAR_UINT_1(FD) read_leb128_u(FD, 1)
+#define READ_VAR_UINT_7(FD) read_leb128_u(FD, 1)
+#define READ_VAR_UINT_32(FD) read_leb128_u(FD, 5)
+#define READ_VAR_INT_1(FD) read_leb128_s(FD, 1)
+#define READ_VAR_INT_7(FD) read_leb128_s(FD, 1)
+"""
+
+    c_read_leb_macro_varuin1 = "READ_VAR_UINT_1(XXX)"
+    c_read_leb_macro_varuin7 = "READ_VAR_UINT_7(XXX)"
+    c_read_leb_macro_varuin32 = "READ_VAR_UINT_32(XXX)"
+    c_read_leb_macro_varin1 = "READ_VAR_INT_1(XXX)"
+    c_read_leb_macro_varin7 = "READ_VAR_INT_7(XXX)"
+    c_read_leb_macro_varin32 = "READ_VAR_INT_32(XXX)"
+
