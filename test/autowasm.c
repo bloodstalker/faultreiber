@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "./read.c"
+
 uint64_t read_leb128_u(int _fd, int max_size) {
   uint8_t read_bytes = 0U;
   uint8_t byte = 0;
@@ -64,7 +66,7 @@ int main (int argc, char** argv) {
   printf("read u res is: %lu.\n", test_u);
   lseek(wasm, 0, SEEK_SET);
   while(read(wasm, &word, sizeof(uint32_t))) {
-    //printf("%d:%02x\t", counter, word);
+    printf("%d:%02x\t", counter, word);
     counter++;
   }
   printf("\n");
