@@ -69,6 +69,9 @@ def pointer_remover(name:str):
     if name[-1] == '*': return name[0:-1] + '_p'
     else: return name
 
+def get_node_name(tag, elem_list):
+    for elem in elem_list:
+        if tag == elem.tag: return elem.attrib["name"]
 
 def reader_generator(elem, elem_list):
     pass
@@ -174,16 +177,18 @@ class CodeGen(object):
         static = "static " if self.argparser.args.static else ""
         for elem in self.def_elems + self.read_elems:
             dummy_list = []
+            dummy_string = str()
             pointer = str()
             access = "."
             dummy_static = str()
             if "isaggregate" in elem.attrib:
-                pointer = "*"
+                #pointer = "*"
+                pointer = ""
                 access = "->"
-                dummy_static = "static "
+                dummy_static = ""
             if "isaggregate" in elem.attrib:
+                dummy_string += ", " + elem.attrib["name"] + "*"  + " dummy_" + elem.attrib["name"]
                 read_source.write(static + inline + text.c_read_elem_sig.replace("YYY", elem.attrib["name"]).replace("XXX", elem.attrib["name"]+pointer))
-                read_source.write("static " + text.c_function_dummy_dec.replace("XXX", elem.attrib["name"] + pointer))
                 count = get_elem_count(elem, self.read_elems+self.def_elems)
                 if count == 1:
                     for child in elem:
@@ -195,58 +200,42 @@ class CodeGen(object):
                         if size > 0:
                             read_size_replacement = str(size)
                         if size == -1:
-                            ref_size = child.attrib["size"][6:]
-                            for child2 in elem:
-                                if child2.tag == ref_size : read_size_replacement = "dummy" + access + child2.attrib["name"]
+                            ref_size = "dummy->" + get_node_name(child.attrib["size"][6:], elem)
+
                         if ref_node:
                             ref_node_name = pointer_remover(ref_node.attrib["name"])
-                            for_dummy_declare = ref_node.attrib["name"] + "* " + ref_node_name + "_ins" + "="
-                            for_read = text.c_read_elem_sig_1.replace("XXX", ref_node_name) + ";\n"
                             if child_count == 1:
-                                for_dummy_assign = "dummy" + access + child.attrib["name"] + "=" +ref_node_name+"_ins" + ";\n"
-                                read_source.write(for_dummy_declare+for_read+for_dummy_assign)
-                            else:
-                                if child_count > 1:
-                                    for_dummy_assign = "dummy" + access + child.attrib["name"] + "[i]" + "=" +ref_node_name+"_ins" + ";\n"
-                                    read_source.write(text.simple_loop.replace("YYY", for_dummy_declare+for_read+for_dummy_assign))
-                                if child_count == -1:
-                                    replacement = str()
-                                    count_name_str = child.attrib["count"][6:]
-                                    for child2 in elem:
-                                        if child2.tag == count_name_str: replacement = "dummy" + access + child2.attrib["name"]
-                                    for_dummy_assign = "dummy" + access + child.attrib["name"] + "[i]" + "=" +ref_node_name+"_ins" + ";\n"
-                                    read_source.write(text.simple_loop.replace("YYY", for_dummy_declare+for_read+for_dummy_assign).replace("XXX", replacement))
+                                for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "dummy->" + child.attrib["name"]) + ";\n"
+                                read_source.write(for_read)
+                            elif child_count > 1:
+                                for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "dummy->" + child.attrib["name"] + "[i]") + ";\n"
+                                read_source.write(for_read)
+                            else: # child_count == -1
+                                count_name_str = child.attrib["count"][6:]
+                                for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "dummy->" + child.attrib["name"] + "[i]") + ";\n"
+                                read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "dummy->" + get_node_name(count_name_str, elem)))
                         else:
-                            for_dummy_declare = ref_node_name + " " + pointer_remover(ref_node_name)+"_ins" + ";\n"
-                            for item in dummy_list:
-                                if item == for_dummy_declare:
-                                    for_dummy_declare = ""
-                            if for_dummy_declare: dummy_list.append(for_dummy_declare)
                             for_read = str()
+                            if child_count == 1: array_subscript = ""
+                            elif child_count > 1: array_subscript = "[i]"
+                            else: array_subscript = "[i]"
                             if "size" in child.attrib:
                                 if "encoding" in child.attrib:
-                                    for_read = get_encoding_read(child.attrib["encoding"])
+                                    for_read = "dummy->" + child.attrib["name"] + array_subscript + "=" + get_encoding_read(child.attrib["encoding"])
                                 else:
-                                    for_read = text.c_read_gen_2.replace("XXX", pointer_remover(ref_node_name)+"_ins").replace("YYY", read_size_replacement)
+                                    for_read = text.c_read_gen_2.replace("XXX", "dummy" + "->"+ child.attrib["name"] + array_subscript).replace("YYY", ref_size)
                             else:
                                 if "encoding" in child.attrib:
-                                    for_read = ref_node_name + "_ins = " + get_encoding_read(child.attrib["encoding"])
+                                    for_read = "dummy->" + child.attrib["name"] + array_subscript + " = " + get_encoding_read(child.attrib["encoding"])
                                 else:
-                                    for_read = text.c_read_gen.replace("XXX", pointer_remover(ref_node_name)+"_ins").replace("YYY", ref_node_name)
+                                    for_read = text.c_read_gen.replace("XXX", "dummy" + "->" + child.attrib["name"] + array_subscript).replace("YYY", ref_node_name)
                             if child_count == 1:
-                                for_dummy_assign = "dummy" + access + child.attrib["name"] + "=" +pointer_remover(ref_node_name)+"_ins" + ";\n"
-                                read_source.write(for_dummy_declare+for_read+for_dummy_assign)
-                            else:
-                                if child_count > 1:
-                                    for_dummy_assign = "dummy" + access + child.attrib["name"] + "[i]" + "=" +pointer_remover(ref_node_name)+"_ins" + ";\n"
-                                    read_source.write(text.simple_loop.replace("YYY", for_dummy_declare+for_read+for_dummy_assign))
-                                if child_count == -1:
-                                    replacement = str()
-                                    count_name_str = child.attrib["count"][6:]
-                                    for child2 in elem:
-                                        if child2.tag == count_name_str: replacement = "dummy" + access + child2.attrib["name"]
-                                    for_dummy_assign = "dummy" + access + child.attrib["name"] + "[i]" + "=" +pointer_remover(ref_node_name)+"_ins" + ";\n"
-                                    read_source.write(text.simple_loop.replace("YYY", for_dummy_declare+for_read+for_dummy_assign).replace("XXX", replacement))
+                                read_source.write(for_read)
+                            elif child_count > 1:
+                                read_source.write(text.simple_loop.replace("YYY", for_read).repalce("XXX", str(child_count)))
+                            else: # child_count = -1
+                                count_name_str = child.attrib["count"][6:]
+                                read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "dummy->" + get_node_name(count_name_str, elem)))
                 else:
                     pass
             # if not aggregate
@@ -254,13 +243,14 @@ class CodeGen(object):
             # read funtion so we dont really need to worry about multiple
             # instances with the same name
             else:
-                read_source.write(static + inline + text.c_read_elem_sig.replace("YYY", elem.attrib["name"]).replace("XXX", type_resolver(elem, self.def_elems)+pointer))
-                read_source.write(text.c_function_dummy_dec.replace("XXX", type_resolver(elem, self.def_elems) + pointer))
-                read_source.write(type_resolver(elem, self.elems) + " " + elem.attrib["name"] + ";\n")
-                read_source.write(text.c_read_gen.replace("XXX", elem.attrib["name"]).replace("YYY", type_resolver(elem, self.def_elems)))
-                read_source.write("dummy = " + elem.attrib["name"] + ";\n")
-            read_source.write(text.c_function_return_type)
+                read_source.write(static + inline + text.c_read_elem_sig.replace("YYY", elem.attrib["name"]).replace("XXX", elem.attrib["name"]+pointer))
+                read_source.write(text.c_read_gen.replace("XXX", "dummy->" + elem.attrib["name"]).replace("YYY", type_resolver(elem, self.def_elems)))
+            #read_source.write(text.c_function_return_type)
             read_source.write(text.c_function_close + "\n")
+
+    def gen_aggregate_read(self):
+        for elem in self.read_elems:
+            pass
 
     def read_xml(self):
         if self.argparser.args.xml:
@@ -321,6 +311,17 @@ class CodeGen(object):
             struct_source.write('#include "' + sub + '"\n\n')
         for child in self.def_elems + self.read_elems:
             struct_source.write("typedef struct {\n")
+            if not "isaggregate" in child.attrib:
+                ref_type = type_resolver(child, self.def_elems + self.read_elems)
+                def_node = get_def_node(ref_type, self.def_elems + self.read_elems)
+                pointer = str()
+                if "count" in child.attrib:
+                    if child.attrib["count"] != "1":
+                        pointer = "*"
+                if def_node:
+                    struct_source.write(ref_type + pointer + "* " + child.attrib["name"] + ";\n")
+                else:
+                    struct_source.write(ref_type + pointer + " " + child.attrib["name"] + ";\n")
             for childer in child:
                 ref_type = type_resolver(childer, self.def_elems + self.read_elems)
                 def_node = get_def_node(ref_type, self.def_elems + self.read_elems)
@@ -369,8 +370,8 @@ class CodeGen(object):
         self.gen_reader_funcs()
         self.gen_struct_header_xml()
         #self.dump_def_elems()
-        #print("")
         #self.dump_read_elems()
+        self.gen_aggregate_read()
 
 # write code here
 def premain(argparser):

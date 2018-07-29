@@ -37,13 +37,6 @@ int64_t read_leb128_s(int _fd, int max_size) {
   return result;
 }
 
-#define READ_VAR_UINT_1(FD) read_leb128_u(FD, 1)
-#define READ_VAR_UINT_7(FD) read_leb128_u(FD, 1)
-#define READ_VAR_UINT_32(FD) read_leb128_u(FD, 5)
-#define READ_VAR_INT_1(FD) read_leb128_s(FD, 1)
-#define READ_VAR_INT_7(FD) read_leb128_s(FD, 1)
-#define READ_VAR_INT_32(FD) read_leb128_s(FD, 5)
-
 #pragma weak main
 int main (int argc, char** argv) {
   int wasm = open("./test.wasm", O_RDONLY);

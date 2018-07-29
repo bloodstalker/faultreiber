@@ -95,7 +95,7 @@
     </Global_Entry>
     <Export_Entry name="W_Export_Entry" isaggregate="true">
       <Field_Len name="field_len" encoding="leb128u" type="uint32" count="1"/>
-      <Field_Str name="field_str" encoding="leb128u" type="string" count="1" size="self::Field_Len"/>
+      <Field_Str name="field_str" type="string" count="1" size="self::Field_Len"/>
       <Kind name="kind" encoding="leb128u" type="uint8" count="1"/>
       <Index name="index" encoding="leb128u" type="uint32" count="1"/>
     </Export_Entry>
