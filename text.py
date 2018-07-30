@@ -82,3 +82,6 @@ int64_t read_leb_128_s(int _fd, int max_size) {
     c_read_leb_128_u = "read_leb_128_u(_fd, 5);\n"
     c_read_leb_128_s = "read_leb_128_s(_fd, 5);\n"
 
+    c_define_buff_size = "#define BUFF_SIZE XXX"
+    c_define_buff_grow_fact = "#define BUFFER_GROW_FACTOR XXX"
+
