@@ -140,6 +140,7 @@ def get_elem_count(elem, elems):
         try:
             if str(int(elem.attrib["count"])) == elem.attrib["count"]:
                 return int(elem.attrib["count"])
+            else: return -1
         except ValueError:
             return -1
     else:
@@ -177,10 +178,10 @@ class Argparser(object):
         parser.add_argument("--verbose", action="store_true", help="verbose", default=False)
         # TODO
         parser.add_argument("--forcenullterm", action="store_true", help="terminate all strings with null even if they are not null-terminated", default=False)
-        # TODO
-        parser.add_argument("--buffersize", type=int, help="the size of the buffer for special reads(e.g. strings)", default=100)
-        # TODO
-        parser.add_argument("--buffgrowfactor", type=float, help="main target name", default=1.6)
+        parser.add_argument("--strbuffersize", type=int, help="the size of the buffer for string reads", default=100)
+        parser.add_argument("--strbuffgrowfactor", type=float, help="the factor by which the strbuffer will grow", default=1.6)
+        parser.add_argument("--voidbuffersize", type=int, help="the size of the buffer for void* buffer", default=100)
+        parser.add_argument("--voidbuffgrowfactor", type=float, help="the factor by which the voidbuffer will grow", default=1.6)
         self.args = parser.parse_args()
 
 def dupemake(path, main_name):
@@ -321,23 +322,30 @@ class CodeGen(object):
         count_int = int()
         count_void = int()
         read_count = len(self.read_elems)
+        # FIXME-count and size present together is not being handled at all
         for elem in self.read_elems + self.def_elems:
             if "isaggregate" in elem.attrib:
                 for child in elem:
+                    ref_node_name = type_resolver(child, self.def_elems)
+                    ref_node = get_def_node(ref_node_name, self.def_elems)
+                    if ref_node: count_void+=1
                     count = get_elem_count(child, self.def_elems + self.read_elems)
                     size = get_elem_size(child, self.def_elems + self.read_elems)
                     type_width = get_type_width(child)
-                    #print(child.tag + ":" + str(type_width))
-                    if "count" in child.attrib: pass
-                    if "size" in child.attrib: pass
+                    #print(elem.tag + " " + child.tag + " " + "count:" + str(count) + " " + "size:" + str(size) + " " + "typ_width:" + str(type_width))
                     if count > 0: count_int+=count*type_width
                     if count < 0: count_void+=1
                     if size > 0: count_int+=size
                     if size < 0: count_void+=1
-                self.mem_size[elem.attrib["name"]] = (str(count_int)+"+" if count_int > 0 else "") + (str(count_void)+"*"+"sizeof(void*)") if count_void > 0 else ""
+                sizeof = (str(count_int) if count_int > 0 else ("")) + ("+" if count_void>0 and count_int>0 else "") + ((str(count_void)+"*"+"sizeof(void*)") if count_void > 0 else "")
+                self.mem_size[elem.attrib["name"]] = text.c_reserve_void_ptr.replace("XXX", sizeof)
+                void_source.write(elem.attrib["name"] + "* = " + text.c_reserve_void_ptr.replace("XXX", sizeof) + ";\n")
                 count_int = 0
                 count_void = 0
             else:
+                ref_node_name = type_resolver(elem, self.def_elems)
+                ref_node = get_def_node(ref_node_name, self.def_elems)
+                if ref_node: count_void+=1
                 if "size" in elem.attrib:
                     count = get_elem_count(elem, self.def_elems + self.read_elems)
                     if count > 0: count_int+= count
@@ -346,8 +354,9 @@ class CodeGen(object):
                     size = get_elem_size(elem, self.def_elems + self.read_elems)
                     if size > 0: count_int+=size
                     else: count_void+=1
-            #void_source.write("void* ptr = malloc(sizeof(void*));\n")
-                self.mem_size[elem.attrib["name"]] = (str(count_int)+"+" if count_int > 0 else "") + (str(count_void)+"*"+"sizeof(void*)") if count_void > 0 else ""
+                sizeof = (str(count_int)+"+" if count_int > 0 else "") + (str(count_void)+"*"+"sizeof(void*)") if count_void > 0 else ""
+                self.mem_size[elem.attrib["name"]] = text.c_reserve_void_ptr.replace("XXX", sizeof)
+                void_source.write(elem.attrib["name"] + "* = " + text.c_reserve_void_ptr.replace("XXX", sizeof) + ";\n")
                 count_int = 0
                 count_void = 0
         void_source.write("}")

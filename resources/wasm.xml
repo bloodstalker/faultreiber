@@ -59,7 +59,7 @@
       <Maximum name="maximum" encoding="leb128u" type="uint32" count="1"></Maximum>
     </Resizable_Limit>
     <Global_Type name="global_type_t" isaggregate="true">
-      <Value_Type name="value_type" type="int" count="1"></Value_Type>
+      <Value_Type name="value_type" type="uint32" count="1"></Value_Type>
       <Mutability name="mutability" encoding="leb128u" type="uint8" count="1"></Mutability>
     </Global_Type>
     <Table_Type name="table_type_t" isaggregate="true">
