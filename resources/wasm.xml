@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<wasm:Structure xmlns:wasm="http://www.w3.org/2001/XMLSchema">
+<FT>
   <Read>
     <Magic_Number name="magic_number" type="uint32" count="1"></Magic_Number>
     <Version name="version" type="uint32" count="1"></Version>
@@ -46,7 +46,6 @@
       <Count name="count" encoding="leb128u" type="uint32" count="1"/>
       <Entries name="entries" type="self::Data_Segment" count="self::Count"/>
     </Data_Section>
-    <Custom_Section name="W_Custom_Section" count="1" isaggregate="true"></Custom_Section>
   </Read>
   <Definition>
     <Init_Expr name="init_expr_t" isaggregate="true">
@@ -122,4 +121,4 @@
       <Data name="data" type="uchar" count="self::Size"/>
     </Data_Segment>
   </Definition>
-</wasm:Structure>
+</FT>

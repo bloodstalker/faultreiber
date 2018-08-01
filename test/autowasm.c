@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #include "./read.c"
+#include "./aggregate.h"
 
 uint64_t read_leb128_u(int _fd, int max_size) {
   uint8_t read_bytes = 0U;
