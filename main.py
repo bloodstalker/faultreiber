@@ -182,6 +182,7 @@ class Argparser(object):
         parser.add_argument("--strbuffgrowfactor", type=float, help="the factor by which the strbuffer will grow", default=1.6)
         parser.add_argument("--voidbuffersize", type=int, help="the size of the buffer for void* buffer", default=100)
         parser.add_argument("--voidbuffgrowfactor", type=float, help="the factor by which the voidbuffer will grow", default=1.6)
+        parser.add_argument("--singlefile", action="store_true", help="the generated code will be put in a single file", default=False)
         self.args = parser.parse_args()
 
 def dupemake(path, main_name):
@@ -332,7 +333,6 @@ class CodeGen(object):
         #void_source.write("void** void_train(void) {\n")
         void_source.write('#ifndef FT_AGGREGATE_H\n#define FT_AGGREGATE_H\n')
         void_source.write('#ifdef __cplusplus\nextern "C" {\n#endif\n')
-        void_source.write("void read_aggr(int _fd) {\n")
         for elem in self.read_elems:
             count = get_elem_count(elem)
             size = get_elem_size(elem)
@@ -350,10 +350,13 @@ class CodeGen(object):
                         void_source.write(ref_node.attrib["name"] + "** " + elem.attrib["name"] + "_" + child.attrib["name"] + "_container;\n")
                     else:
                         void_source.write(ref_node.attrib["name"] + "* " + elem.attrib["name"] + "_" + child.attrib["name"] + "_container;\n")
+        void_source.write("void malloc_all(void) {\n")
         count_int = int()
         count_void = int()
         read_count = len(self.read_elems)
-        void_source.write("//TODO-assign sub-containers to contrainers here\n")
+        #extern = "extern "
+        extern = ""
+        #void_source.write("//TODO-assign sub-containers to contrainers here\n")
         # FIXME-count and size present together is not being handled at all
         for elem in self.read_elems:
         #for elem in self.read_elems + self.def_elems:
@@ -394,7 +397,15 @@ class CodeGen(object):
                 void_source.write(elem.attrib["name"] + "_container"  + " = " + text.c_reserve_void_ptr.replace("XXX", sizeof) + ";\n")
                 count_int = 0
                 count_void = 0
-        #void_source.write("}")
+        void_source.write("}\n")
+        void_source.write("void read_aggr(int _fd) {\n")
+        for elem in self.read_elems:
+            if "isaggregate" in elem.attrib:
+                for child in elem:
+                    ref_node_name = type_resolver(child, self.def_elems)
+                    ref_node = get_def_node(ref_node_name, self.def_elems)
+                    if ref_node:
+                        void_source.write(elem.attrib["name"] + "_container->" + child.attrib["name"] + " = " + elem.attrib["name"] + "_" + child.attrib["name"] + "_container"  + ";\n")
 
     def gen_aggregate_read(self):
         agg_source = open(self.argparser.args.outdir + "/aggregate.h", "a")
@@ -405,6 +416,21 @@ class CodeGen(object):
         for elem in self.read_elems:
             agg_source.write("ft_read_" + elem.attrib["name"] + "(_fd," + elem.attrib["name"] + "_container"  + ");\n")
         agg_source.write("}\n")
+
+    #FIXME-not handling double pointers
+    def gen_release(self):
+        agg_source = open(self.argparser.args.outdir + "/aggregate.h", "a")
+        agg_source.write("void release_all(void) {\n")
+        for elem in self.read_elems:
+            agg_source.write("free(" + elem.attrib["name"] + "_container);\n")
+        agg_source.write("}\n")
+
+    def gen_return(self):
+        agg_source = open(self.argparser.args.outdir + "/aggregate.h", "a")
+        for elem in self.read_elems:
+            agg_source.write(elem.attrib["name"] + "* ft_ret_" + elem.attrib["name"] + "(void) {\n")
+            agg_source.write("return " + elem.attrib["name"] + "_container"+ ";\n")
+            agg_source.write("}\n")
         agg_source.write('#ifdef __cplusplus\n}\n#endif\n')
         agg_source.write("#endif //end of header guard\n\n")
 
@@ -531,6 +557,8 @@ class CodeGen(object):
         self.gen_aggregate_read()
         #self.dump_mem_dict()
         #self.dump_all_childs()
+        self.gen_release()
+        self.gen_return()
 
 # write code here
 def premain(argparser):
