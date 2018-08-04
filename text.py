@@ -14,6 +14,7 @@ class text():
     #c_read_elem_sig = "XXX ft_read_YYY(int _fd) {\n"
     #c_read_elem_sig = "void ft_read_YYY(int _fd, XXX* dummyZZZ) {\n"
     c_read_elem_sig = "void ft_read_YYY(int _fd, XXX* dummy) {\n"
+    c_read_elem_sig_h = "void ft_read_YYY(int _fd, XXX* dummy);\n"
     c_read_elem_sig_1 = "ft_read_XXX(_fd)"
     c_read_elem_sig_2 = "ft_read_XXX(_fd, YYY)"
     #c_read_elem_sig_2 = "ft_read_XXX(_fd, &YYY)"

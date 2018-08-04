@@ -5,38 +5,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "./read.c"
+#include "./structs.h"
+#include "./read.h"
 #include "./aggregate.h"
-
-uint64_t read_leb128_u(int _fd, int max_size) {
-  uint8_t read_bytes = 0U;
-  uint8_t byte = 0;
-  uint64_t result = 0U;
-  uint32_t shift = 0U;
-  do {
-    read(_fd, &byte, 1);read_bytes++;read_bytes++;
-    result |= (byte & 0x7f) << shift;
-    shift += 7;
-  } while(((byte & 0x80) != 0) && (read_bytes < max_size));
-  return result;
-}
-
-int64_t read_leb128_s(int _fd, int max_size) {
-  uint8_t byte;
-  uint8_t read_bytes = 0U;
-  uint8_t last_byte;
-  int64_t result = 0;
-  uint32_t shift = 0U;
-  read(_fd, &byte, 1);
-  do {
-    read(_fd, &byte, 1);read_bytes++;
-    result |= (byte & 0x7f) << shift;
-    last_byte = byte;
-    shift += 7;
-  } while(((byte & 0x80) != 0) && read_bytes < max_size);
-  if ((last_byte & 0x40) != 0) result |= -(1 << shift);
-  return result;
-}
 
 #pragma weak main
 int main (int argc, char** argv) {
@@ -56,7 +27,7 @@ int main (int argc, char** argv) {
   printf("test_byte:%08x\n", word);
 
   lseek(wasm, 9, SEEK_SET);
-  test_u = READ_VAR_UINT_32(wasm);
+  test_u = read_leb_128_u(wasm, 5);
   printf("read u res is: %lu.\n", test_u);
   lseek(wasm, 0, SEEK_SET);
   while(read(wasm, &word, sizeof(uint32_t))) {
