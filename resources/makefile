@@ -34,7 +34,7 @@ depend:.depend
 .c.o:
 	$(CC) $(CC_FLAGS) -c $< -o $@ 
 
-$(TARGET): $(TARGET).o
+$(TARGET): $(TARGET).o read.o aggregate.o structs.o
 	$(CC) $^ $(LD_FLAGS) -o $@
 
 ASM:$(TARGET).asm

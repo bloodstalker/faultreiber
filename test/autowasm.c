@@ -12,6 +12,8 @@
 #pragma weak main
 int main (int argc, char** argv) {
   int wasm = open("./test.wasm", O_RDONLY);
+  malloc_all();
+#if 0
   uint64_t test_u = 0U;
   int64_t test_s = 0;
   unsigned char test_byte;
@@ -35,5 +37,6 @@ int main (int argc, char** argv) {
     counter++;
   }
   printf("\n");
+#endif
   return 0;
 }

@@ -65,6 +65,8 @@ int64_t read_leb_128_s(int _fd, int max_size) {
   if ((last_byte & 0x40) != 0) result |= -(1 << shift);
   return result;
 }"""
+    c_read_leb_128_s_sig = "int64_t read_leb_128_s(int _fd, int max_size);\n"
+    c_read_leb_128_u_sig = "uint64_t read_leb_128_u(int _fd, int max_size);\n"
 
     c_read_leb_macro_defs = """
 #define READ_VAR_UINT_1(FD) read_leb128_u(FD, 1)
