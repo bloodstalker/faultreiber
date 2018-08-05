@@ -282,6 +282,7 @@ class CodeGen(object):
             if "isaggregate" in elem.attrib:
                 dummy_string += ", " + elem.attrib["name"] + "*"  + " dummy_" + elem.attrib["name"]
                 read_source.write(static + inline + text.c_read_elem_sig.replace("YYY", elem.attrib["name"]).replace("XXX", elem.attrib["name"]+pointer))
+                read_source.write("dummy = malloc(sizeof(" + elem.attrib["name"] + "));\n")
                 count = get_elem_count(elem)
                 if count == 1:
                     for child in elem:
@@ -305,6 +306,8 @@ class CodeGen(object):
                                 read_source.write(for_read)
                             else: # child_count == -1
                                 count_name_str = child.attrib["count"][6:]
+                                read_source.write("if (" + "dummy->" + get_node_name(count_name_str, elem) + ")\n")
+                                read_source.write("dummy->" + child.attrib["name"] + " = " + "malloc(sizeof(void*)*" + "dummy->" + get_node_name(count_name_str, elem) + ");\n")
                                 for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "dummy->" + child.attrib["name"] + "[i]") + ";\n"
                                 read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "dummy->" + get_node_name(count_name_str, elem)))
                         else:
@@ -328,6 +331,8 @@ class CodeGen(object):
                                 read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", str(child_count)))
                             else: # child_count = -1
                                 count_name_str = child.attrib["count"][6:]
+                                read_source.write("dummy->" + child.attrib["name"] + " = " + "malloc(sizeof(" + type_resolver(child, self.def_elems + self.read_elems)  + ")*" + "dummy->" + get_node_name(count_name_str, elem) + ");\n")
+                                read_source.write("if (" + "dummy->" + get_node_name(count_name_str, elem) + ")\n")
                                 read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "dummy->" + get_node_name(count_name_str, elem)))
                 else:
                     pass

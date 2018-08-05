@@ -4,45 +4,89 @@
     <Magic_Number name="magic_number" type="uint32" count="1"></Magic_Number>
     <Version name="version" type="uint32" count="1"></Version>
     <Type_Section name="W_Type_Section" count="1" type="" isaggregate="true">
+      <ID name="id" type="uint8" encoding="leb128u"/>
+      <PayloadLength name="payloadlength" type="uint32" encoding="leb128u"/>
+      <NameLength name="namelength" type="uint32" encoding="leb128u"/>
+      <Name name="name" type="string" size="self::NameLength"/>
       <Count name="count" encoding="leb128u" type="uint32" count="1"/>
       <Type_Section_Entry count="self::Count" type="self::Type_Section_Entry" name="entries"/>
     </Type_Section>
     <Import_Section name="W_Import_Section" count="1" type="" isaggregate="true">
+      <ID name="id" type="uint8" encoding="leb128u"/>
+      <PayloadLength name="payloadlength" type="uint32" encoding="leb128u"/>
+      <NameLength name="namelength" type="uint32" encoding="leb128u"/>
+      <Name name="name" type="string" size="self::NameLength"/>
       <Count name="count" encoding="leb128u" type="uint32" count="1"/>
       <Entries name="entries" type="self::Import_Section_Entry" count="self::Count"/>
     </Import_Section>
     <Function_Section name="W_Function_Section" count="1" type="" isaggregate="true">
+      <ID name="id" type="uint8" encoding="leb128u"/>
+      <PayloadLength name="payloadlength" type="uint32" encoding="leb128u"/>
+      <NameLength name="namelength" type="uint32" encoding="leb128u"/>
+      <Name name="name" type="string" size="self::NameLength"/>
       <Count name="count" encoding="leb128u" type="uint32" count="1"/>
       <Types name="types" encoding="leb128u" type="uint32" count="self::Count"/>
     </Function_Section>
     <Table_Section name="W_Table_Section" count="1" type="" isaggregate="true">
+      <ID name="id" type="uint8" encoding="leb128u"/>
+      <PayloadLength name="payloadlength" type="uint32" encoding="leb128u"/>
+      <NameLength name="namelength" type="uint32" encoding="leb128u"/>
+      <Name name="name" type="string" size="self::NameLength"/>
       <Count name="count" encoding="leb128u" type="uint32" count="1"/>
       <Entries name="entries" type="self::Table_Type" count="self::Count"/>
     </Table_Section>
     <Memory_Section name="W_Memory_Section" count="1" type="" isaggregate="true">
+      <ID name="id" type="uint8" encoding="leb128u"/>
+      <PayloadLength name="payloadlength" type="uint32" encoding="leb128u"/>
+      <NameLength name="namelength" type="uint32" encoding="leb128u"/>
+      <Name name="name" type="string" size="self::NameLength"/>
       <Count name="count" encoding="leb128u" type="uint32" count="1"/>
       <Entries name="entries" type="self::Memory_Type" count="self::Count"/>
     </Memory_Section>
     <Global_Section name="W_Global_Section" count="1" type="" isaggregate="true">
+      <ID name="id" type="uint8" encoding="leb128u"/>
+      <PayloadLength name="payloadlength" type="uint32" encoding="leb128u"/>
+      <NameLength name="namelength" type="uint32" encoding="leb128u"/>
+      <Name name="name" type="string" size="self::NameLength"/>
       <Count name="count" encoding="leb128u" type="uint32" count="1"/>
       <Globals name="globals" type="self::Global_Entry" count="self::Count"/>
     </Global_Section>
     <Export_Section name="W_Export_Section" count="1" type="" isaggregate="true">
+      <ID name="id" type="uint8" encoding="leb128u"/>
+      <PayloadLength name="payloadlength" type="uint32" encoding="leb128u"/>
+      <NameLength name="namelength" type="uint32" encoding="leb128u"/>
+      <Name name="name" type="string" size="self::NameLength"/>
       <Count name="count" encoding="leb128u" type="uint32" count="1"/>
       <Entries name="entries" type="self::Export_Entry" count="self::Count"/>
     </Export_Section>
     <Start_Section name="W_Start_Section" count="1" isaggregate="true">
+      <ID name="id" type="uint8" encoding="leb128u"/>
+      <PayloadLength name="payloadlength" type="uint32" encoding="leb128u"/>
+      <NameLength name="namelength" type="uint32" encoding="leb128u"/>
+      <Name name="name" type="string" size="self::NameLength"/>
       <Index name="index" encoding="leb128u" type="uint32" count="1"/>
     </Start_Section>
     <Element_Section name="W_Element_Section" count="1" isaggregate="true">
+      <ID name="id" type="uint8" encoding="leb128u"/>
+      <PayloadLength name="payloadlength" type="uint32" encoding="leb128u"/>
+      <NameLength name="namelength" type="uint32" encoding="leb128u"/>
+      <Name name="name" type="string" size="self::NameLength"/>
       <Count name="count" encoding="leb128u" type="uint32" count="1"/>
       <Entries name="entries" type="self::Element_Segment" count="self::Count"/>
     </Element_Section>
     <Code_Section name="W_Code_Section" count="1" isaggregate="true">
+      <ID name="id" type="uint8" encoding="leb128u"/>
+      <PayloadLength name="payloadlength" type="uint32" encoding="leb128u"/>
+      <NameLength name="namelength" type="uint32" encoding="leb128u"/>
+      <Name name="name" type="string" size="self::NameLength"/>
       <Count name="count" encoding="leb128u" type="uint32" count="1"/>
       <Bodies name="bodies" type="self::Function_Body" count="self::Count"/>
     </Code_Section>
     <Data_Section name="W_Data_Section" count="1" isaggregate="true">
+      <ID name="id" type="uint8" encoding="leb128u"/>
+      <PayloadLength name="payloadlength" type="uint32" encoding="leb128u"/>
+      <NameLength name="namelength" type="uint32" encoding="leb128u"/>
+      <Name name="name" type="string" size="self::NameLength"/>
       <Count name="count" encoding="leb128u" type="uint32" count="1"/>
       <Entries name="entries" type="self::Data_Segment" count="self::Count"/>
     </Data_Section>
@@ -69,11 +113,11 @@
       <Resizable_Limit count="1" type="self::Resizable_Limit" name="resizable_limit"></Resizable_Limit>
     </Memory_Type>
     <Type_Section_Entry name="W_Type_Section_Entry" isaggregate="true">
-      <Form name="form" encoding="leb128s" type="int8" count="1"/>
-      <Param_Count name="param_count" encoding="leb128s" type="uint32" count="1"/>
-      <Param_Types name="param_types" encoding="leb128s" type="int8" count="self::Param_Count"/>
+      <Form name="form" encoding="leb128u" type="uint8" count="1"/>
+      <Param_Count name="param_count" encoding="leb128u" type="uint32" count="1"/>
+      <Param_Types name="param_types" encoding="leb128u" type="uint8" count="self::Param_Count"/>
       <Return_Count name="return_count" encoding="leb128u" type="uint8"/>
-      <Return_Types name="return_types" encoding="leb128s" type="int8"/>
+      <Return_Types name="return_types" encoding="leb128u" type="uint8" count="self::Return_Count"/>
     </Type_Section_Entry>
     <Import_Section_Entry name="W_Import_Section_Entry" isaggregate="true">
       <Module_Length name="module_length" encoding="leb128u" type="uint32" count="1"/>
