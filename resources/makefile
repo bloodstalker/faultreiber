@@ -1,3 +1,5 @@
+SHELL=bash
+SHELL?=bash
 TARGET=autowasm
 CC=clang
 CC?=clang
@@ -12,8 +14,12 @@ MEM_SANITIZERS_CC= -g -fsanitize=memory -fno-omit-frame-pointer
 MEM_SANITIZERS_LD= -g -fsanitize=memory
 UB_SANITIZERS_CC= -g -fsanitize=undefined -fno-omit-frame-pointer
 UB_SANITIZERS_LD= -g -fsanitize=undefined
+COV_CC= -fprofile-instr-generate -fcoverage-mapping
+COV_LD= -fprofile-instr-generate
 # BUILD_MODES are=RELEASE(default), DEBUG,ADDSAN,MEMSAN,UBSAN
 BUILD_MODE?=RELEASE
+OBJ_LIST:=$(patsubst %.c, %.o, $(wildcard *.c))
+ASM_LIST:=$(patsubst %.c, %.dis, $(wildcard *.c))
 
 ifeq ($(BUILD_MODE), ADDSAN)
 ifeq ($(CC), gcc)
@@ -49,13 +55,15 @@ LD_FLAGS+=$(EXTRA_LD_FLAGS)
 
 all:$(TARGET)
 
-everything:$(TARGET) A ASM SO $(TARGET)-static $(TARGET)-dbg TAGS
+everything:$(TARGET) A ASM SO $(TARGET)-static $(TARGET)-dbg TAGS $(TARGET)-cov
 
 depend:.depend
 
 .depend:$(SRCS)
 	rm -rf .depend
 	$(CC) -MM $(CC_FLAGS) $^ > ./.depend
+	echo $(patsubst %.o:, %.odbg:, $(shell $(CC) -MM $(CC_FLAGS) $^)) | sed -r 's/[a-z0-9\-\_]+\.odbg/\n&/g' >> ./.depend
+	echo $(patsubst %.o:, %.ocov:, $(shell $(CC) -MM $(CC_FLAGS) $^)) | sed -r 's/[a-z0-9\-\_]+\.ocov/\n&/g' >> ./.depend
 
 -include ./.depend
 
@@ -65,16 +73,30 @@ depend:.depend
 %.odbg:%.c
 	$(CC) $(CC_FLAGS) -g -c $< -o $@
 
-$(TARGET): $(TARGET).o read.o structs.o aggregate.o
+%.ocov:%.c
+	$(CC) $(CC_FLAGS) $(COV_CC) -c $< -o $@
+
+$(TARGET): $(TARGET).o read.o aggregate.o structs.o
 	$(CC) $^ $(LD_FLAGS) -o $@
 
-$(TARGET)-static: $(TARGET).o read.o structs.o aggregate.o
+$(TARGET)-static: $(TARGET).o read.o aggregate.o structs.o
 	$(CC) $^ $(LD_FLAGS) -static -o $@
 
-$(TARGET)-dbg: $(TARGET).odbg read.odbg structs.odbg aggregate.odbg
+$(TARGET)-dbg: $(TARGET).odbg read.o aggregate.o structs.o
 	$(CC) $^ $(LD_FLAGS) -g -o $@
 
-ASM:$(TARGET).asm
+$(TARGET)-cov: $(TARGET).ocov read.o aggregate.o structs.o
+	$(CC) $^ $(LD_FLAGS) $(COV_LD) -o $@
+
+cov:
+	@llvm-profdata merge -sparse ./default.profraw -o ./default.profdata
+	@llvm-cov show $(TARGET)-cov -instr-profile=default.profdata
+
+covrep:
+	@llvm-profdata merge -sparse ./default.profraw -o ./default.profdata
+	@llvm-cov report $(TARGET)-cov -instr-profile=default.profdata
+
+ASM:$(ASM_LIST)
 
 SO:$(TARGET).so
 
@@ -87,20 +109,20 @@ tags:$(SRCS)
 		sed -e 's/[\\ ]/\n/g'|sed -e '/^$$/d' -e '/\.o:[ \t]*$$/d'|\
 		ctags -L - --c++-kinds=+p --fields=+iaS --extra=+q)
 
-$(TARGET).asm: $(TARGET).o read.o structs.o aggregate.o
-	objdump -r -d -M intel -S $(TARGET).o > $(TARGET).asm
+%.dis: %.o
+	objdump -r -d -M intel -S $< > $@
 
-$(TARGET).so: $(TARGET).o read.o structs.o aggregate.o
+$(TARGET).so: $(TARGET).o read.o aggregate.o structs.o
 	$(CC) $^ $(LD_FLAGS) -shared -o $@
 
-$(TARGET).a: $(TARGET).o read.o structs.o aggregate.o
+$(TARGET).a: $(TARGET).o read.o aggregate.o structs.o
 	ar rcs $(TARGET).a $(TARGET).o
 
 clean:
-	rm -f *.o *.odbg *~ $(TARGET) $(TARGET).so $(TARGET).asm $(TARGET)-static $(TARGET)-dbg $(TARGET).a
+	rm -f *.o *.dis *.odbg *.ocov *~ $(TARGET) $(TARGET).so $(TARGET)-static $(TARGET)-dbg $(TARGET).a $(TARGET)-cov
 
 deepclean:
-	rm -f *.o *.odbg *~ $(TARGET) $(TARGET).so $(TARGET).asm tags $(TARGET)-static $(TARGET)-dbg $(TARGET).a
+	rm -f *.o *.dis *.odbg *.ocov *~ $(TARGET) $(TARGET).so tags $(TARGET)-static $(TARGET)-dbg $(TARGET).a $(TARGET)-cov
 	rm .depend
 
 help:
@@ -112,7 +134,10 @@ help:
 	@echo "--$(TARGET) builds the dynamically-linked executable"
 	@echo "--$(TARGET)-dbg will generate the debug build. BUILD_MODE should be set to DEBUG to work"
 	@echo "--$(TARGET)-static will statically link the executable to the libraries"
+	@echo "--$(TARGET)-cov is the coverage build"
+	@echo "--cov will print the coverage report"
+	@echo "--covrep will print the coverage report"
 	@echo "--A will build the static library"
 	@echo "--TAGS will build the tags file"
 	@echo "--clean"
-	@echo "--deepclean will clean almost everything"
+	@echo "--deepclean$(newline) will clean almost everything"

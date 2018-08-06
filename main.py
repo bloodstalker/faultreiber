@@ -296,6 +296,55 @@ class CodeGen(object):
                         if size == -1:
                             ref_size = "dummy->" + get_node_name(child.attrib["size"][6:], elem)
 
+                        if "conditional" in child.attrib:
+                            cond_name = get_node_name(child.attrib["condition"][6:], elem)
+                            for cond in child:
+                                child_count = get_elem_count(cond)
+                                ref_node_name = type_resolver(cond, self.def_elems)
+                                ref_node = get_def_node(ref_node_name, self.def_elems)
+                                if ref_node:
+                                    read_source.write("if (dummy->" + cond_name + "==" + str(cond.text) + "){\n")
+                                    read_source.write("dummy->" + cond.attrib["name"] + "=malloc(sizeof(" + ref_node.attrib["name"] + "));")
+                                    if child_count == 1:
+                                        for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "dummy->" + cond.attrib["name"]) + ";\n"
+                                        read_source.write(for_read)
+                                    elif child_count > 1:
+                                        for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "dummy->" + cond.attrib["name"] + "[i]") + ";\n"
+                                        read_source.write(for_read)
+                                    else: # child_count == -1
+                                        count_name_str = cond.attrib["count"][6:]
+                                        read_source.write("if (" + "dummy->" + get_node_name(count_name_str, elem) + ")\n")
+                                        read_source.write("dummy->" + cond.attrib["name"] + " = " + "malloc(sizeof(void*)*" + "dummy->" + get_node_name(count_name_str, child) + ");\n")
+                                        for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "dummy->" + cond.attrib["name"] + "[i]") + ";\n"
+                                        read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "dummy->" + get_node_name(count_name_str, child)))
+                                    read_source.write("}\n")
+                                else:
+                                    read_source.write("if (dummy->" + cond_name + "==" + str(cond.text) + "){\n")
+                                    read_source.write("dummy->" + cond.attrib["name"] + "=malloc(sizeof(" + ref_node_name  + "));")
+                                    for_read = str()
+                                    if child_count == 1: array_subscript = ""
+                                    elif child_count > 1: array_subscript = "[i]"
+                                    else: array_subscript = "[i]"
+                                    if "size" in cond.attrib:
+                                        if "encoding" in cond.attrib:
+                                            for_read = "dummy->" + cond.attrib["name"] + array_subscript + "=" + get_encoding_read(cond.attrib["encoding"])
+                                        else:
+                                            for_read = text.c_read_gen_2.replace("XXX", "dummy" + "->"+ cond.attrib["name"] + array_subscript).replace("YYY", ref_size)
+                                    else:
+                                        if "encoding" in cond.attrib:
+                                            for_read = "dummy->" + cond.attrib["name"] + array_subscript + " = " + get_encoding_read(cond.attrib["encoding"])
+                                        else:
+                                            for_read = text.c_read_gen.replace("XXX", "dummy" + "->" + cond.attrib["name"] + array_subscript).replace("YYY", ref_node_name)
+                                    if child_count == 1:
+                                        read_source.write(for_read)
+                                    elif child_count > 1:
+                                        read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", str(child_count)))
+                                    else: # child_count = -1
+                                        count_name_str = cond.attrib["count"][6:]
+                                        read_source.write("dummy->" + cond.attrib["name"] + " = " + "malloc(sizeof(" + type_resolver(cond, self.def_elems + self.read_elems)  + ")*" + "dummy->" + get_node_name(count_name_str, elem) + ");\n")
+                                        read_source.write("if (" + "dummy->" + get_node_name(count_name_str, child) + ")\n")
+                                        read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "dummy->" + get_node_name(count_name_str, elem)))
+                                    read_source.write("}\n")
                         if ref_node:
                             ref_node_name = pointer_remover(ref_node.attrib["name"])
                             if child_count == 1:
@@ -344,6 +393,7 @@ class CodeGen(object):
                 read_source.write(static + inline + text.c_read_elem_sig.replace("YYY", elem.attrib["name"]).replace("XXX", elem.attrib["name"]+pointer))
                 read_source.write(text.c_read_gen.replace("XXX", "dummy->" + elem.attrib["name"]).replace("YYY", type_resolver(elem, self.def_elems)))
             #read_source.write(text.c_function_return_type)
+            read_source.write("return dummy;\n")
             read_source.write(text.c_function_close + "\n")
         read_source_header = open(self.argparser.args.outdir + "/read.h", "w")
         read_source_header.write("#ifndef FT_READ_H\n#define FT_READ_H\n")
