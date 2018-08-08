@@ -80,5 +80,9 @@ To get a list of the targets the makfile supports you can run its `help` target.
 All the items under limitations.<br/>
 Figure out what the license of the generated code is.<br/>
 
+## Projects
+The list of the projects that use faulreiber:<br/>
+* [bruiser](https://github.com/bloodstalker/mutator/tree/master/bruiser)<br/>
+
 ## License
 `faultreiber` along with the makefile are provided under MIT. I don't know if I have the legal right to license the generated files, but if I do, they are also under MIT as far as I'm concerned.<br/>
