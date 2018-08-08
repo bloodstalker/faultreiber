@@ -34,6 +34,39 @@ The `FT::conditional` tag for a type means that the actual content of the node w
 A node referencing another node as the value of its `type` attribute is insensitive to the order in which the nodes appear under their parent node, `DEFINITION`.<br/>
 `size` attribute is currently only meaningful when the `type` attribute is set as `string` in which case it denotes the size of the string.<br/>
 
+## Options
+
+```bash
+  -h, --help            show this help message and exit
+  --targetname TARGETNAME
+                        main target name
+  --outdir OUTDIR       path to output dir
+  --structs STRUCTS     the structs json file
+  --structsinclude STRUCTSINCLUDE
+                        the path to the header that's going to be included by
+                        structs.h before structure declarations.
+  --xml XML             paht to the xml file
+  --dbg                 debug
+  --datetime            print date and time in autogen files
+  --inline              inlines reader funcs
+  --static              statics reader funcs
+  --verbose             verbose
+  --forcenullterm       terminate all strings with null even if they are not
+                        originally null-terminated
+  --strbuffersize STRBUFFERSIZE
+                        the size of the buffer for string reads
+  --strbuffgrowfactor STRBUFFGROWFACTOR
+                        the factor by which the strbuffer will grow
+  --voidbuffersize VOIDBUFFERSIZE
+                        the size of the buffer for void* buffer
+  --voidbuffgrowfactor VOIDBUFFGROWFACTOR
+                        the factor by which the voidbuffer will grow
+  --singlefile          the generated code will be put in a single file
+  --singlefilename SINGLEFILENAME
+                        name of the single file
+```
+
+
 ## limitations
 Big-Endian reads are not supported.<br/>
 Only files that are instantly-decodable(need a single pass) are supported.<br/>
