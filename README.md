@@ -13,21 +13,21 @@ Any child node of either `DEFINITION` or `READ` will have to at least have the a
 the tag names of the nodes that are on the same level should be unique. The `name` attribute of the nodes on the same level need to be unique as well.<br/>
 tags, needless to say, should follow the naming convention for naming XML nodes. The `name` attributes should follow the C identifier naming convention(if the value of the `name` attribute is invalid in C as as identifier you're going to end up with code that won't even build).<br/>
 The following values are valid values for the `type` attribute:<br/>
-int8
-uint8
-int16
-uint16
-int32
-uint32
-int64
-uint64
-int128
-uint128
-float
-double
-string
-FT::conditional
-self::TAG
+* int8
+* uint8
+* int16
+* uint16
+* int32
+* uint32
+* int64
+* uint64
+* int128
+* uint128
+* float
+* double
+* string
+* FT::conditional
+* self::TAG
 
 Whether `int128` or `uint128` are defined depends on your the C implementation you are using on your host. If 128-bit integers are not supported or you need to read in bigger integers, you can simply use a smaller int type and increase the `count` attribute accordingly.<br/>
 The `FT::conditional` tag for a type means that the actual content of the node will depend on a value. The attribute `condition` will provide what that condition is. The value for the condition should be provided as text for the different nodes that define what the actual contents should be.<br/>
@@ -41,6 +41,7 @@ None byte sized raw reads are not supported.<br/>
 String reads need to have a size. Currently null-terminated string reads without the size of the string are not supported.<br/>
 
 ## makefile
+To get a list of the targets the makfile supports you can run its `help` target.<br/>
 
 ## TODO
 All the items under limitations.<br/>
