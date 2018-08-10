@@ -358,7 +358,7 @@ class CodeGen(object):
                                 read_source.write("if (" + "dummy->" + get_node_name(count_name_str, elem) + ")\n")
                                 read_source.write("dummy->" + child.attrib["name"] + " = " + "malloc(sizeof(void*)*" + "dummy->" + get_node_name(count_name_str, elem) + ");\n")
                                 for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "dummy->" + child.attrib["name"] + "[i]") + ";\n"
-                                read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "dummy->" + get_node_name(count_name_str, elem)))
+                                read_source.write(text.simple_loop.replace("YYY", "dummy->" + child.attrib["name"] + "[i]=" + for_read).replace("XXX", "dummy->" + get_node_name(count_name_str, elem)))
                         else:
                             for_read = str()
                             if child_count == 1: array_subscript = ""
@@ -391,6 +391,7 @@ class CodeGen(object):
             # instances with the same name
             else:
                 read_source.write(static + inline + text.c_read_elem_sig.replace("YYY", elem.attrib["name"]).replace("XXX", elem.attrib["name"]+pointer))
+                read_source.write("dummy = malloc(sizeof(" + elem.attrib["name"] + "));\n")
                 read_source.write(text.c_read_gen.replace("XXX", "dummy->" + elem.attrib["name"]).replace("YYY", type_resolver(elem, self.def_elems)))
             #read_source.write(text.c_function_return_type)
             read_source.write("return dummy;\n")
@@ -421,8 +422,10 @@ class CodeGen(object):
             count = get_elem_count(elem)
             size = get_elem_size(elem)
             if count != 1:
+                void_source_h.write("extern " + elem.attrib["name"] + "** " + elem.attrib["name"] + "_container;\n")
                 void_source.write(elem.attrib["name"] + "** " + elem.attrib["name"] + "_container;\n")
             else:
+                void_source_h.write("extern " + elem.attrib["name"] + "* " + elem.attrib["name"] + "_container;\n")
                 void_source.write(elem.attrib["name"] + "* " + elem.attrib["name"] + "_container;\n")
             for child in elem:
                 ref_node_name = type_resolver(child, self.def_elems)
@@ -431,8 +434,10 @@ class CodeGen(object):
                     count = get_elem_count(child)
                     size = get_elem_size(child)
                     if count != 1:
+                        void_source_h.write("extern " + ref_node.attrib["name"] + "** " + elem.attrib["name"] + "_" + child.attrib["name"] + "_container;\n")
                         void_source.write(ref_node.attrib["name"] + "** " + elem.attrib["name"] + "_" + child.attrib["name"] + "_container;\n")
                     else:
+                        void_source_h.write("extern " + ref_node.attrib["name"] + "* " + elem.attrib["name"] + "_" + child.attrib["name"] + "_container;\n")
                         void_source.write(ref_node.attrib["name"] + "* " + elem.attrib["name"] + "_" + child.attrib["name"] + "_container;\n")
         void_source.write("void malloc_all(void) {\n")
         void_source_h.write("void malloc_all(void);\n")
@@ -490,14 +495,15 @@ class CodeGen(object):
                     ref_node_name = type_resolver(child, self.def_elems)
                     ref_node = get_def_node(ref_node_name, self.def_elems)
                     if ref_node:
-                        void_source.write(elem.attrib["name"] + "_container->" + child.attrib["name"] + " = " + elem.attrib["name"] + "_" + child.attrib["name"] + "_container"  + ";\n")
+                        pass
+                        #void_source.write(elem.attrib["name"] + "_container->" + child.attrib["name"] + " = " + elem.attrib["name"] + "_" + child.attrib["name"] + "_container"  + ";\n")
 
     def gen_aggregate_read(self):
         agg_source = open(self.aggregate_source, "a")
         agg_source_h = open(self.aggregate_source_h, "a")
         agg_source_h.write("void read_aggr(int _fd);\n")
         for elem in self.read_elems:
-            agg_source.write("ft_read_" + elem.attrib["name"] + "(_fd," + elem.attrib["name"] + "_container"  + ");\n")
+            agg_source.write(elem.attrib["name"] + "_container = " + "ft_read_" + elem.attrib["name"] + "(_fd," + elem.attrib["name"] + "_container"  + ");\n")
         agg_source.write("}\n")
 
     #FIXME-not handling double pointers

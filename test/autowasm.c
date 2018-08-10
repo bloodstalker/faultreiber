@@ -12,47 +12,30 @@
 #pragma weak main
 int main (int argc, char** argv) {
   int wasm = open("./test.wasm", O_RDONLY);
-  malloc_all();
   read_aggr(wasm);
-  magic_number* mn = ft_ret_magic_number();
-  version* v = ft_ret_version();
-  W_Type_Section* ts = ft_ret_W_Type_Section();
-#if 0
-  printf("magic_number:%x\n", mn->magic_number);
-  printf("version:%d\n", v->version);
-  printf("type section id:%d\n", ts->id);
-  printf("type section payloadlength:%d\n", ts->payloadlength);
-  printf("type_section entry count:%d\n", ts->count);
-#endif
-  for (int i=0; i < 7; ++i) {
-    //printf("param_count:%d\n",ts->entries[i]->param_count);
-    //printf("param_count:%d\n",ts->entries[i]);
+
+  printf("magic_number:%x\n", magic_number_container->magic_number);
+  printf("version:%x\n", version_container->version);
+  printf("type section id:%d\n", W_Type_Section_container->id);
+  printf("type section payloadlength:%d\n", W_Type_Section_container->payloadlength);
+  printf("type_section entry count:%d\n", W_Type_Section_container->count);
+  for (int i=0; i < W_Type_Section_container->count; ++i) {
+    printf("param_count:%d\n",W_Type_Section_container->entries[i]->param_count);
+    for (int j = 0; j < W_Type_Section_container->entries[i]->param_count; ++j)
+      printf("param_types:%d\n",W_Type_Section_container->entries[i]->param_types[j]);
+    printf("return_count:%d\n", W_Type_Section_container->entries[i]->return_count);
+    for (int j = 0; j < W_Type_Section_container->entries[i]->return_count; ++j)
+      printf("param_types:%d\n",W_Type_Section_container->entries[i]->return_types[j]);
+  }
+  printf("import_section_id:%d\n", W_Import_Section_container->id);
+  printf("import_section_payloadlength:%d\n", W_Import_Section_container->payloadlength);
+  printf("import_section_count:%d\n", W_Import_Section_container->count);
+  for(int i = 0; i < W_Import_Section_container->count; ++i) {
+    printf("import_section_entry_module_length:%d\n", W_Import_Section_container->entries[i]->module_length);
+    printf("module_str:%s\n", W_Import_Section_container->entries[i]->module_str);
+    printf("import_section_entry_field_length:%d\n", W_Import_Section_container->entries[i]->field_len);
   }
 
-#if 0
-  uint64_t test_u = 0U;
-  int64_t test_s = 0;
-  unsigned char test_byte;
-  unsigned char byte;
-  uint32_t word;
-  uint32_t counter = 0U;
-
-  read(wasm, &word, 8);
-  printf("test_byte:%08x\n", word);
-
-  lseek(wasm, 9, SEEK_SET);
-  read(wasm, &word, 8);
-  printf("test_byte:%08x\n", word);
-
-  lseek(wasm, 9, SEEK_SET);
-  test_u = read_leb_128_u(wasm, 5);
-  printf("read u res is: %lu.\n", test_u);
-  lseek(wasm, 0, SEEK_SET);
-  while(read(wasm, &word, sizeof(uint32_t))) {
-    printf("%d:%02x\t", counter, word);
-    counter++;
-  }
-  printf("\n");
-#endif
+  release_all();
   return 0;
 }
