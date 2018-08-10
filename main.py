@@ -329,12 +329,20 @@ class CodeGen(object):
                                         if "encoding" in cond.attrib:
                                             for_read = "dummy->" + cond.attrib["name"] + array_subscript + "=" + get_encoding_read(cond.attrib["encoding"])
                                         else:
-                                            for_read = text.c_read_gen_2.replace("XXX", "dummy" + "->"+ cond.attrib["name"] + array_subscript).replace("YYY", ref_size)
+                                            if cond.attrib["name"] == "string":
+                                                for_read = "dummy->" + cond.attrib["name"] + " = " + "malloc(" + ref_size + "+1);\n"
+                                                for_read += "dummy->" + cond.attrib["name"] + "["+ref_size+"]=" + "0;\n"
+                                                for_read = text.c_read_gen_2_no.replace("XXX", "dummy" + "->"+ cond.attrib["name"] + array_subscript).replace("YYY", ref_size)
+                                            else:
+                                                for_read = text.c_read_gen_2.replace("XXX", "dummy" + "->"+ cond.attrib["name"] + array_subscript).replace("YYY", ref_size)
                                     else:
                                         if "encoding" in cond.attrib:
                                             for_read = "dummy->" + cond.attrib["name"] + array_subscript + " = " + get_encoding_read(cond.attrib["encoding"])
                                         else:
-                                            for_read = text.c_read_gen.replace("XXX", "dummy" + "->" + cond.attrib["name"] + array_subscript).replace("YYY", ref_node_name)
+                                            if cond.attrib["type"] == "string":
+                                                for_read = text.c_read_gen_no.replace("XXX", "dummy" + "->" + cond.attrib["name"] + array_subscript).replace("YYY", ref_node_name)
+                                            else:
+                                                for_read = text.c_read_gen.replace("XXX", "dummy" + "->" + cond.attrib["name"] + array_subscript).replace("YYY", ref_node_name)
                                     if child_count == 1:
                                         read_source.write(for_read)
                                     elif child_count > 1:
@@ -345,6 +353,7 @@ class CodeGen(object):
                                         read_source.write("if (" + "dummy->" + get_node_name(count_name_str, child) + ")\n")
                                         read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "dummy->" + get_node_name(count_name_str, elem)))
                                     read_source.write("}\n")
+                            continue
                         if ref_node:
                             ref_node_name = pointer_remover(ref_node.attrib["name"])
                             if child_count == 1:
@@ -368,12 +377,20 @@ class CodeGen(object):
                                 if "encoding" in child.attrib:
                                     for_read = "dummy->" + child.attrib["name"] + array_subscript + "=" + get_encoding_read(child.attrib["encoding"])
                                 else:
-                                    for_read = text.c_read_gen_2.replace("XXX", "dummy" + "->"+ child.attrib["name"] + array_subscript).replace("YYY", ref_size)
+                                    if child.attrib["type"] == "string":
+                                        for_read = "dummy->" + child.attrib["name"] + " = " + "malloc(" + ref_size + "+1);\n"
+                                        for_read += "dummy->" + child.attrib["name"] + "["+ref_size+"]=" + "0;\n"
+                                        for_read += text.c_read_gen_2_no.replace("XXX", "dummy" + "->"+ child.attrib["name"] + array_subscript).replace("YYY", ref_size)
+                                    else:
+                                        for_read = text.c_read_gen_2.replace("XXX", "dummy" + "->"+ child.attrib["name"] + array_subscript).replace("YYY", ref_size)
                             else:
                                 if "encoding" in child.attrib:
                                     for_read = "dummy->" + child.attrib["name"] + array_subscript + " = " + get_encoding_read(child.attrib["encoding"])
                                 else:
-                                    for_read = text.c_read_gen.replace("XXX", "dummy" + "->" + child.attrib["name"] + array_subscript).replace("YYY", ref_node_name)
+                                    if child.attrib["type"] == "string":
+                                        for_read = text.c_read_gen_no.replace("XXX", "dummy" + "->" + child.attrib["name"] + array_subscript).replace("YYY", ref_node_name)
+                                    else:
+                                        for_read = text.c_read_gen.replace("XXX", "dummy" + "->" + child.attrib["name"] + array_subscript).replace("YYY", ref_node_name)
                             if child_count == 1:
                                 read_source.write(for_read)
                             elif child_count > 1:

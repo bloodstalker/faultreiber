@@ -31,10 +31,20 @@ int main (int argc, char** argv) {
   printf("import_section_payloadlength:%d\n", W_Import_Section_container->payloadlength);
   printf("import_section_count:%d\n", W_Import_Section_container->count);
   for(int i = 0; i < W_Import_Section_container->count; ++i) {
-    printf("import_section_entry_module_length:%d\n", W_Import_Section_container->entries[i]->module_length);
+    printf("module_length:%d\n", W_Import_Section_container->entries[i]->module_length);
     printf("module_str:%s\n", W_Import_Section_container->entries[i]->module_str);
-    printf("import_section_entry_field_length:%d\n", W_Import_Section_container->entries[i]->field_len);
+    printf("field_length:%d\n", W_Import_Section_container->entries[i]->field_len);
+    printf("field_str:%s\n", W_Import_Section_container->entries[i]->field_str);
+    printf("kind:%d\n", W_Import_Section_container->entries[i]->kind);
+    if (W_Import_Section_container->entries[i]->kind == 0)
+      printf("type:%d\n", W_Import_Section_container->entries[i]->kind);
+    printf("\n");
   }
+  printf("function_section_id:%d\n", W_Function_Section_container->id);
+  printf("function_section_payloadlength:%d\n", W_Function_Section_container->payloadlength);
+  printf("function_section_count:%d\n", W_Function_Section_container->count);
+  for (int i = 0; i < W_Function_Section_container->count; ++i)
+    printf("type:%d\n", W_Function_Section_container->types[i]);
 
   release_all();
   return 0;
