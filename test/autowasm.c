@@ -16,6 +16,7 @@ int main (int argc, char** argv) {
 
   printf("magic_number:%x\n", magic_number_container->magic_number);
   printf("version:%x\n", version_container->version);
+
   printf("type section id:%d\n", W_Type_Section_container->id);
   printf("type section payloadlength:%d\n", W_Type_Section_container->payloadlength);
   printf("type_section entry count:%d\n", W_Type_Section_container->count);
@@ -45,6 +46,22 @@ int main (int argc, char** argv) {
   printf("function_section_count:%d\n", W_Function_Section_container->count);
   for (int i = 0; i < W_Function_Section_container->count; ++i)
     printf("type:%d\n", W_Function_Section_container->types[i]);
+
+  printf("table_section_id:%d\n", W_Table_Section_container->id);
+  printf("table_section_payloadlength:%d\n", W_Table_Section_container->payloadlength);
+  printf("table_section_count:%d\n", W_Table_Section_container->count);
+  for (int i = 0; i < W_Table_Section_container->count; ++i) {
+    printf("element_type:%d\n", W_Table_Section_container->entries[i]->element_type);
+    printf("rl_flags:%d\n", W_Table_Section_container->entries[i]->resizable_limit->flags);
+    printf("rl_initial:%d\n", W_Table_Section_container->entries[i]->resizable_limit->initial);
+    printf("rl_maximum:%d\n", W_Table_Section_container->entries[i]->resizable_limit->maximum);
+  }
+
+  printf("memory_section_id:%d\n", W_Memory_Section_container->id);
+  printf("memory_section_payload_length:%d\n", W_Memory_Section_container->payloadlength);
+  printf("rl_flags:%d\n", W_Memory_Section_container->entries->resizable_limit->flags);
+  printf("rl_initial:%d\n", W_Memory_Section_container->entries->resizable_limit->initial);
+  printf("rl_maximum:%d\n", W_Memory_Section_container->entries->resizable_limit->maximum);
 
   release_all();
   return 0;

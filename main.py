@@ -358,10 +358,10 @@ class CodeGen(object):
                             ref_node_name = pointer_remover(ref_node.attrib["name"])
                             if child_count == 1:
                                 for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "dummy->" + child.attrib["name"]) + ";\n"
-                                read_source.write(for_read)
+                                read_source.write("dummy->" + child.attrib["name"] + "=" + for_read)
                             elif child_count > 1:
                                 for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "dummy->" + child.attrib["name"] + "[i]") + ";\n"
-                                read_source.write(for_read)
+                                read_source.write("dummy->" + child.attrib["name"] + "=" + for_read)
                             else: # child_count == -1
                                 count_name_str = child.attrib["count"][6:]
                                 read_source.write("if (" + "dummy->" + get_node_name(count_name_str, elem) + ")\n")
