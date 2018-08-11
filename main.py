@@ -295,6 +295,7 @@ class CodeGen(object):
                 dummy_string += ", " + elem.attrib["name"] + "*"  + " dummy_" + elem.attrib["name"]
                 read_source.write(static + inline + text.c_read_elem_sig.replace("YYY", elem.attrib["name"]).replace("XXX", elem.attrib["name"]+pointer))
                 read_source.write("dummy = malloc(sizeof(" + elem.attrib["name"] + "));\n")
+                read_source.write(text.c_void_manager_proto.replace("XXX", "dummy"));
                 self.malloc_list.append(C_Obj(elem.attrib["name"], [elem.tag]))
                 count = get_elem_count(elem)
                 if count == 1:
@@ -320,6 +321,7 @@ class CodeGen(object):
                                 if ref_node:
                                     read_source.write("if (dummy->" + cond_name + "==" + str(cond.text) + "){\n")
                                     read_source.write("dummy->" + cond.attrib["name"] + "=malloc(sizeof(" + ref_node.attrib["name"] + "));")
+                                    read_source.write(text.c_void_manager_proto.replace("XXX", "dummy->" + cond.attrib["name"]));
                                     self.malloc_list.append(C_Obj(ref_node.attrib["name"], [elem.tag, child.tag]))
                                     if child_count == 1:
                                         for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "dummy->" + cond.attrib["name"]) + ";\n"
@@ -331,6 +333,7 @@ class CodeGen(object):
                                         count_name_str = cond.attrib["count"][6:]
                                         read_source.write("if (" + "dummy->" + get_node_name(count_name_str, elem) + ")\n")
                                         read_source.write("dummy->" + cond.attrib["name"] + " = " + "malloc(sizeof(void*)*" + "dummy->" + get_node_name(count_name_str, child) + ");\n")
+                                        read_source.write(text.c_void_manager_proto.replace("XXX", "dummy->" + cond.attri["name"]));
                                         self.malloc_list.append(C_Obj("sizeof(void*)*dummy->"+get_node_name(count_name_str, child), [elem.attrib["name"], child.attrib["name"], cond.arrtib["name"]]))
                                         for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "dummy->" + cond.attrib["name"] + "[i]") + ";\n"
                                         read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "dummy->" + get_node_name(count_name_str, child)))
@@ -338,6 +341,7 @@ class CodeGen(object):
                                 else:
                                     read_source.write("if (dummy->" + cond_name + "==" + str(cond.text) + "){\n")
                                     read_source.write("dummy->" + cond.attrib["name"] + "=malloc(sizeof(" + ref_node_name  + "));")
+                                    read_source.write(text.c_void_manager_proto.replace("XXX", "dummy->" + cond.attrib["name"]));
                                     for_read = str()
                                     if child_count == 1: array_subscript = ""
                                     elif child_count > 1: array_subscript = "[i]"
@@ -348,6 +352,7 @@ class CodeGen(object):
                                         else:
                                             if cond.attrib["name"] == "string":
                                                 for_read = "dummy->" + cond.attrib["name"] + " = " + "malloc(" + ref_size + "+1);\n"
+                                                read_source.write(text.c_void_manager_proto.replace("XXX", "dummy->" + cond.attrib["name"]));
                                                 for_read += "dummy->" + cond.attrib["name"] + "["+ref_size+"]=" + "0;\n"
                                                 for_read = text.c_read_gen_2_no.replace("XXX", "dummy" + "->"+ cond.attrib["name"] + array_subscript).replace("YYY", ref_size)
                                             else:
@@ -367,6 +372,7 @@ class CodeGen(object):
                                     else: # child_count = -1
                                         count_name_str = cond.attrib["count"][6:]
                                         read_source.write("dummy->" + cond.attrib["name"] + " = " + "malloc(sizeof(" + type_resolver(cond, self.def_elems + self.read_elems)  + ")*" + "dummy->" + get_node_name(count_name_str, elem) + ");\n")
+                                        read_source.write(text.c_void_manager_proto.replace("XXX", "dummy->" + cond.attrib["name"]));
                                         read_source.write("if (" + "dummy->" + get_node_name(count_name_str, child) + ")\n")
                                         read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "dummy->" + get_node_name(count_name_str, elem)))
                                     read_source.write("}\n")
@@ -383,6 +389,7 @@ class CodeGen(object):
                                 count_name_str = child.attrib["count"][6:]
                                 read_source.write("if (" + "dummy->" + get_node_name(count_name_str, elem) + ")\n")
                                 read_source.write("dummy->" + child.attrib["name"] + " = " + "malloc(sizeof(void*)*" + "dummy->" + get_node_name(count_name_str, elem) + ");\n")
+                                read_source.write(text.c_void_manager_proto.replace("XXX", "dummy->" + child.attrib["name"]));
                                 for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "dummy->" + child.attrib["name"] + "[i]") + ";\n"
                                 read_source.write(text.simple_loop.replace("YYY", "dummy->" + child.attrib["name"] + "[i]=" + for_read).replace("XXX", "dummy->" + get_node_name(count_name_str, elem)))
                         else:
@@ -399,9 +406,11 @@ class CodeGen(object):
                                             delimiter = child.attrib["delimiter"]
                                             for_read = "int32_t " + child.attrib["name"] + "_del_pos =" + text.c_read_until_delimiter_proto.replace("XXX", delimiter) + ";\n"
                                             for_read += "dummy->" + child.attrib["name"] + "=" + "malloc(" + child.attrib["name"] + "_del_pos);\n"
+                                            for_read +=text.c_void_manager_proto.replace("XXX", "dummy->" + child.attrib["name"]);
                                             for_read += text.c_read_gen_2_no.replace("XXX", "dummy" + "->"+ child.attrib["name"] + array_subscript).replace("YYY", child.attrib["name"]+"_del_pos")
                                         else:
                                             for_read = "dummy->" + child.attrib["name"] + " = " + "malloc(" + ref_size + "+1);\n"
+                                            for_read += text.c_void_manager_proto.replace("XXX", "dummy->" + child.attrib["name"]);
                                             for_read += "dummy->" + child.attrib["name"] + "["+ref_size+"]=" + "0;\n"
                                             for_read += text.c_read_gen_2_no.replace("XXX", "dummy" + "->"+ child.attrib["name"] + array_subscript).replace("YYY", ref_size)
                                     else:
@@ -421,6 +430,7 @@ class CodeGen(object):
                             else: # child_count = -1
                                 count_name_str = child.attrib["count"][6:]
                                 read_source.write("dummy->" + child.attrib["name"] + " = " + "malloc(sizeof(" + type_resolver(child, self.def_elems + self.read_elems)  + ")*" + "dummy->" + get_node_name(count_name_str, elem) + ");\n")
+                                read_source.write(text.c_void_manager_proto.replace("XXX", "dummy->" + child.attrib["name"]));
                                 read_source.write("if (" + "dummy->" + get_node_name(count_name_str, elem) + ")\n")
                                 read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "dummy->" + get_node_name(count_name_str, elem)))
                 else:
@@ -432,6 +442,7 @@ class CodeGen(object):
             else:
                 read_source.write(static + inline + text.c_read_elem_sig.replace("YYY", elem.attrib["name"]).replace("XXX", elem.attrib["name"]+pointer))
                 read_source.write("dummy = malloc(sizeof(" + elem.attrib["name"] + "));\n")
+                read_source.write(text.c_void_manager_proto.replace("XXX", "dummy"));
                 read_source.write(text.c_read_gen.replace("XXX", "dummy->" + elem.attrib["name"]).replace("YYY", type_resolver(elem, self.def_elems)))
             #read_source.write(text.c_function_return_type)
             read_source.write("return dummy;\n")
@@ -454,6 +465,9 @@ class CodeGen(object):
         void_source.write('#include "./structs.h"\n')
         void_source.write('#include "./read.h"\n')
         void_source.write("#include <stdlib.h>\n")
+        void_source.write("void** void_train;\n")
+        void_source.write("uint64_t current_void_size = 0U;\n")
+        void_source.write("uint64_t current_void_count = 0U;\n")
         #void_source.write("void** void_train(void) {\n")
         void_source_h.write('#ifndef FT_AGGREGATE_H\n#define FT_AGGREGATE_H\n')
         void_source_h.write('#ifdef __cplusplus\nextern "C" {\n#endif\n')
@@ -574,8 +588,9 @@ class CodeGen(object):
         agg_source_h = open(self.aggregate_source_h, "a")
         agg_source_h.write("void release_all(void);\n")
         agg_source.write("void release_all(void) {\n")
-        for elem in self.read_elems:
-            agg_source.write("free(" + elem.attrib["name"] + "_container);\n")
+        agg_source.write("for (int i=current_void_count-1;i>=0;--i) {\n")
+        agg_source.write("free(void_train[i]);\n}\n")
+        agg_source.write("free(void_train);\n")
         agg_source.write("}\n")
 
     def gen_return(self):
@@ -634,6 +649,8 @@ class CodeGen(object):
         struct_source_c = open(get_full_path(self.argparser.args.outdir, "structs.c"), "w")
         struct_source.write("#ifndef FT_STRUCTS_H\n#define FT_STRUCTS_H\n")
         struct_source_c.write('#include "structs.h"\n')
+        struct_source_c.write('#include "stdlib.h"\n')
+        struct_source_c.write('#include "stdio.h"\n')
         struct_source.write('#include <unistd.h>\n')
         struct_source.write(text.pre_header_guard)
         struct_source.write(text.autogen_warning)
@@ -646,9 +663,14 @@ class CodeGen(object):
         struct_source_c.write(text.c_read_leb_u_def + "\n")
         struct_source_c.write(text.c_read_leb_s_def + "\n")
         struct_source_c.write(text.c_read_until_delimiter + "\n")
+        struct_source_c.write(text.c_void_manager + "\n")
+        struct_source.write("extern void** void_train;\n")
+        struct_source.write("extern uint64_t current_void_size;\n")
+        struct_source.write("extern uint64_t current_void_count;\n")
         struct_source.write(text.c_read_leb_128_u_sig + "\n")
         struct_source.write(text.c_read_leb_128_s_sig + "\n")
         struct_source.write(text.c_read_until_delimiter_sig + "\n")
+        struct_source.write(text.c_void_manager_sig + "\n")
         #struct_source.write(text.c_read_leb_macro_defs + "\n")
         if self.argparser.args.structsinclude:
             copy(self.argparser.args.structsinclude, self.argparser.args.outdir)
