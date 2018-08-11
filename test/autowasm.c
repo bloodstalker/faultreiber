@@ -63,6 +63,19 @@ int main (int argc, char** argv) {
   printf("rl_initial:%d\n", W_Memory_Section_container->entries->resizable_limit->initial);
   printf("rl_maximum:%d\n", W_Memory_Section_container->entries->resizable_limit->maximum);
 
+  if (W_Global_Section_container == NULL) printf("global section doesnt exist.\n");
+
+  printf("export_section_id:%d\n", W_Export_Section_container->id);
+  printf("export_section_payloadlength:%d\n", W_Export_Section_container->payloadlength);
+  printf("entry count:%d\n", W_Export_Section_container->count);
+
+  for (int i = 0; i < W_Export_Section_container->count; ++i) {
+    printf("field_len:%d\n", W_Export_Section_container->entries[i]->field_len);
+    printf("field_str:%s\n", W_Export_Section_container->entries[i]->field_str);
+    printf("kind:%d\n", W_Export_Section_container->entries[i]->kind);
+    printf("index:%d\n", W_Export_Section_container->entries[i]->index);
+  }
+
   release_all();
   return 0;
 }

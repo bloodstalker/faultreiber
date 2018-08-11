@@ -17,6 +17,8 @@ import datetime
 
 # TODO-doesnt support non-byte-sized reads
 # TODO-doesnt support big-endian normal reads
+# TODO-memory management!!
+# TODO-conditional for READs
 def type_resolver(elem, elem_list):
     type_str = elem.attrib["type"]
     type_name = elem.attrib["name"]
@@ -186,6 +188,11 @@ class Argparser(object):
         parser.add_argument("--singlefilename", type=str, help="name of the single file")
         self.args = parser.parse_args()
 
+class C_Obj():
+    def __init__(self, str, ancestry):
+        self.malloc = str
+        self.ancestry = ancestry
+
 def dupemake(path, main_name):
     copy("./resources/makefile", path)
     makefile_path = get_full_path(path, "makefile")
@@ -214,6 +221,7 @@ class CodeGen(object):
         self.read_flags = ""
         self.struct_source = ""
         self.struct_flags = ""
+        self.malloc_list = []
 
     def file_manager(self):
         if self.argparser.args.singlefile:
@@ -257,6 +265,10 @@ class CodeGen(object):
         for node in self.root.iter():
             print(node.tag)
 
+    def dump_malloc(self):
+        for obj in self.malloc_list:
+            print(obj.malloc + ":" + str(obj.ancestry))
+
     def gen_reader_funcs(self):
         temp_dec_list = []
 
@@ -283,6 +295,7 @@ class CodeGen(object):
                 dummy_string += ", " + elem.attrib["name"] + "*"  + " dummy_" + elem.attrib["name"]
                 read_source.write(static + inline + text.c_read_elem_sig.replace("YYY", elem.attrib["name"]).replace("XXX", elem.attrib["name"]+pointer))
                 read_source.write("dummy = malloc(sizeof(" + elem.attrib["name"] + "));\n")
+                self.malloc_list.append(C_Obj(elem.attrib["name"], [elem.tag]))
                 count = get_elem_count(elem)
                 if count == 1:
                     for child in elem:
@@ -305,6 +318,7 @@ class CodeGen(object):
                                 if ref_node:
                                     read_source.write("if (dummy->" + cond_name + "==" + str(cond.text) + "){\n")
                                     read_source.write("dummy->" + cond.attrib["name"] + "=malloc(sizeof(" + ref_node.attrib["name"] + "));")
+                                    self.malloc_list.append(C_Obj(ref_node.attrib["name"], [elem.tag, child.tag]))
                                     if child_count == 1:
                                         for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "dummy->" + cond.attrib["name"]) + ";\n"
                                         read_source.write(for_read)
@@ -315,6 +329,7 @@ class CodeGen(object):
                                         count_name_str = cond.attrib["count"][6:]
                                         read_source.write("if (" + "dummy->" + get_node_name(count_name_str, elem) + ")\n")
                                         read_source.write("dummy->" + cond.attrib["name"] + " = " + "malloc(sizeof(void*)*" + "dummy->" + get_node_name(count_name_str, child) + ");\n")
+                                        self.malloc_list.append(C_Obj("sizeof(void*)*dummy->"+get_node_name(count_name_str, child), [elem.attrib["name"], child.attrib["name"], cond.arrtib["name"]]))
                                         for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "dummy->" + cond.attrib["name"] + "[i]") + ";\n"
                                         read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "dummy->" + get_node_name(count_name_str, child)))
                                     read_source.write("}\n")
@@ -435,6 +450,7 @@ class CodeGen(object):
         void_source_h.write('#ifndef FT_AGGREGATE_H\n#define FT_AGGREGATE_H\n')
         void_source_h.write('#ifdef __cplusplus\nextern "C" {\n#endif\n')
         void_source_h.write('#include "./structs.h"\n')
+        # generating the extern declarations and definitions
         for elem in self.read_elems:
             count = get_elem_count(elem)
             size = get_elem_size(elem)
@@ -444,6 +460,7 @@ class CodeGen(object):
             else:
                 void_source_h.write("extern " + elem.attrib["name"] + "* " + elem.attrib["name"] + "_container;\n")
                 void_source.write(elem.attrib["name"] + "* " + elem.attrib["name"] + "_container;\n")
+            '''
             for child in elem:
                 ref_node_name = type_resolver(child, self.def_elems)
                 ref_node = get_def_node(ref_node_name, self.def_elems)
@@ -456,6 +473,8 @@ class CodeGen(object):
                     else:
                         void_source_h.write("extern " + ref_node.attrib["name"] + "* " + elem.attrib["name"] + "_" + child.attrib["name"] + "_container;\n")
                         void_source.write(ref_node.attrib["name"] + "* " + elem.attrib["name"] + "_" + child.attrib["name"] + "_container;\n")
+            '''
+        # end
         void_source.write("void malloc_all(void) {\n")
         void_source_h.write("void malloc_all(void);\n")
         count_int = int()
@@ -481,9 +500,9 @@ class CodeGen(object):
                     if size > 0: count_int+=size
                     if size < 0: count_void+=1
                 sizeof = (str(count_int) if count_int > 0 else ("")) + ("+" if count_void>0 and count_int>0 else "") + ((str(count_void)+"*"+"sizeof(void*)") if count_void > 0 else "")
-                self.mem_size[elem.attrib["name"]] = text.c_reserve_void_ptr.replace("XXX", sizeof)
+                #self.mem_size[elem.attrib["name"]] = text.c_reserve_void_ptr.replace("XXX", sizeof)
                 #void_source.write(elem.attrib["name"] + "* " + elem.attrib["name"] + "_container"  + " = " + text.c_reserve_void_ptr.replace("XXX", sizeof) + ";\n")
-                void_source.write(elem.attrib["name"] + "_container"  + " = " + text.c_reserve_void_ptr.replace("XXX", sizeof) + ";\n")
+                #void_source.write(elem.attrib["name"] + "_container"  + " = " + text.c_reserve_void_ptr.replace("XXX", sizeof) + ";\n")
                 count_int = 0
                 count_void = 0
             else:
@@ -499,9 +518,9 @@ class CodeGen(object):
                     if size > 0: count_int+=size
                     else: count_void+=1
                 sizeof = (str(count_int)+"+" if count_int > 0 else "") + (str(count_void)+"*"+"sizeof(void*)") if count_void > 0 else ""
-                self.mem_size[elem.attrib["name"]] = text.c_reserve_void_ptr.replace("XXX", sizeof)
+                #self.mem_size[elem.attrib["name"]] = text.c_reserve_void_ptr.replace("XXX", sizeof)
                 #void_source.write(elem.attrib["name"] + "* " + elem.attrib["name"] + "_container"  + " = " + text.c_reserve_void_ptr.replace("XXX", sizeof) + ";\n")
-                void_source.write(elem.attrib["name"] + "_container"  + " = " + text.c_reserve_void_ptr.replace("XXX", sizeof) + ";\n")
+                #void_source.write(elem.attrib["name"] + "_container"  + " = " + text.c_reserve_void_ptr.replace("XXX", sizeof) + ";\n")
                 count_int = 0
                 count_void = 0
         void_source.write("}\n")
@@ -519,8 +538,26 @@ class CodeGen(object):
         agg_source = open(self.aggregate_source, "a")
         agg_source_h = open(self.aggregate_source_h, "a")
         agg_source_h.write("void read_aggr(int _fd);\n")
+        agg_source.write("uint8_t eof = 0U;")
         for elem in self.read_elems:
+            if "unorderedbegin" in elem.attrib:
+                agg_source.write("do {\n")
+
+            if "unordered" in elem.attrib:
+                for child in elem:
+                    if "issign" in child.attrib:
+                        sign_type = type_resolver(child, self.def_elems+ self.read_elems)
+                        sign_name = " dummy_" + child.attrib["name"] + elem.attrib["name"]
+                        agg_source.write("if (read(_fd, &eof, 1)<0) break;\nelse lseek(_fd, -1, SEEK_CUR);\n")
+                        agg_source.write(sign_type + sign_name + ";\n")
+                        agg_source.write(text.c_read_gen.replace("XXX", sign_name).replace("YYY", sign_type))
+                        agg_source.write("lseek(_fd, -sizeof(" + sign_type + "), SEEK_CUR);\n")
+                        agg_source.write("if (" + sign_name + "==" + child.text + "){\n")
             agg_source.write(elem.attrib["name"] + "_container = " + "ft_read_" + elem.attrib["name"] + "(_fd," + elem.attrib["name"] + "_container"  + ");\n")
+            if "unordered" in elem.attrib: agg_source.write("}\n")
+
+            if "unorderedend" in elem.attrib:
+                agg_source.write("}while(0);\n")
         agg_source.write("}\n")
 
     #FIXME-not handling double pointers
@@ -588,11 +625,14 @@ class CodeGen(object):
         struct_source = open(self.struct_source_h, "w")
         struct_source_c = open(get_full_path(self.argparser.args.outdir, "structs.c"), "w")
         struct_source.write("#ifndef FT_STRUCTS_H\n#define FT_STRUCTS_H\n")
-        struct_source_c.write('#include "structs.h"')
-        struct_source.write('#include <unistd.h>')
+        struct_source_c.write('#include "structs.h"\n')
+        struct_source.write('#include <unistd.h>\n')
         struct_source.write(text.pre_header_guard)
         struct_source.write(text.autogen_warning)
-        if self.argparser.args.datetime: struct_source.write("// " + self.dnt + "\n")
+        struct_source_c.write(text.autogen_warning)
+        if self.argparser.args.datetime:
+            struct_source.write("// " + self.dnt + "\n")
+            struct_source_c.write("// " + self.dnt + "\n")
         struct_source.write(text.header_guard_begin.replace("XXX", "structs".upper()))
         struct_source.write(text.header_inttype)
         struct_source_c.write(text.c_read_leb_u_def + "\n")
@@ -675,6 +715,7 @@ class CodeGen(object):
         #self.dump_all_childs()
         self.gen_release()
         self.gen_return()
+        #self.dump_malloc()
 
 
 # write code here
