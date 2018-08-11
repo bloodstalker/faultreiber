@@ -69,8 +69,23 @@ int64_t read_leb_128_s(int _fd, int max_size) {
   if ((last_byte & 0x40) != 0) result |= -(1 << shift);
   return result;
 }"""
+
+    c_read_until_delimiter = """
+int32_t read_until_delimiter(int _fd, uint8_t delimiter) {
+  uint8_t dummy = 0;
+  int32_t pos = 0;
+  while(1) {
+  read(_fd, &dummy, 1);
+  pos++;
+  if (dummy == delimiter) {
+    lseek(_fd, -pos, SEEK_CUR);
+    return pos;
+  }}
+}"""
     c_read_leb_128_s_sig = "int64_t read_leb_128_s(int _fd, int max_size);\n"
     c_read_leb_128_u_sig = "uint64_t read_leb_128_u(int _fd, int max_size);\n"
+    c_read_until_delimiter_sig = "int32_t read_until_delimiter(int _fd, uint8_t delimiter);\n"
+    c_read_until_delimiter_proto = "read_until_delimiter(_fd, XXX)"
 
     c_read_leb_macro_defs = """
 #define READ_VAR_UINT_1(FD) read_leb128_u(FD, 1)

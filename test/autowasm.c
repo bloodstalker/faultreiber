@@ -76,6 +76,57 @@ int main (int argc, char** argv) {
     printf("index:%d\n", W_Export_Section_container->entries[i]->index);
   }
 
+  if (W_Start_Section_container == NULL) printf("start section doesnt exist.\n");
+
+  printf("element_seciton_id:%d\n", W_Element_Section_container->id);
+  printf("element_section_payloadlength:%d\n", W_Element_Section_container->payloadlength);
+  printf("entry count:%d\n", W_Element_Section_container->count);
+
+  for (int i = 0; i < W_Element_Section_container->count; ++i) {
+    printf("index:%d\n", W_Element_Section_container->entries[i]->index);
+    for (int j = 0; j < 3; ++j) {
+      printf("code:%d\n", W_Element_Section_container->entries[i]->init->code[j]);
+    }
+    printf("num_length:%d\n", W_Element_Section_container->entries[i]->num_length);
+    for (int j = 0; j < W_Element_Section_container->entries[i]->num_length; ++j) {
+      printf("elems:%d\n", W_Element_Section_container->entries[i]->elems[j]);
+    }
+  }
+
+  printf("code_section_id:%d\n", W_Code_Section_container->id);
+  printf("code_section_payloadlength:%d\n", W_Code_Section_container->payloadlength);
+  printf("count:%d\n", W_Code_Section_container->count);
+
+  for (int i = 0; i < W_Code_Section_container->count; ++i) {
+    printf("body_size:%d\n", W_Code_Section_container->bodies[i]->body_size);
+    printf("local_count:%d\n", W_Code_Section_container->bodies[i]->local_count);
+    if (W_Code_Section_container->bodies[i]->local_count > 0) {
+      for (int j =0; j < W_Code_Section_container->bodies[i]->local_count; ++j) {
+        for (int k = 0; k < W_Code_Section_container->bodies[i]->locals[j]->count; ++k) {
+        }
+      }
+    }
+    printf("code:\n");
+    for (int j = 0; j < W_Code_Section_container->bodies[i]->body_size; ++j) {
+      printf("%02x ", W_Code_Section_container->bodies[i]->code[j]);
+    }
+    printf("\n");
+  }
+
+  printf("data_section_id:%d\n", W_Data_Section_container->id);
+  printf("data_section_payloadlength:%d\n", W_Data_Section_container->payloadlength);
+  printf("data seg count:%d\n", W_Data_Section_container->count);
+
+  for (int i = 0; i < W_Data_Section_container->count; ++i) {
+    printf("index:%d\n", W_Data_Section_container->entries[i]->index);
+    printf("size:%d\n", W_Data_Section_container->entries[i]->size);
+    printf("code:\n");
+    for (int j = 0; j < W_Data_Section_container->entries[i]->size; ++j) {
+      printf("%c ", W_Data_Section_container->entries[i]->data[j]);
+    }
+    printf("\n");
+  }
+
   release_all();
   return 0;
 }

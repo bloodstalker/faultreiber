@@ -307,8 +307,10 @@ class CodeGen(object):
                         if size > 0:
                             read_size_replacement = str(size)
                         if size == -1:
-                            ref_size = "dummy->" + get_node_name(child.attrib["size"][6:], elem)
-
+                            if "delimiter" in child.attrib:
+                                ref_size = ""
+                            else:
+                                ref_size = "dummy->" + get_node_name(child.attrib["size"][6:], elem)
                         if "conditional" in child.attrib:
                             cond_name = get_node_name(child.attrib["condition"][6:], elem)
                             for cond in child:
@@ -393,9 +395,15 @@ class CodeGen(object):
                                     for_read = "dummy->" + child.attrib["name"] + array_subscript + "=" + get_encoding_read(child.attrib["encoding"])
                                 else:
                                     if child.attrib["type"] == "string":
-                                        for_read = "dummy->" + child.attrib["name"] + " = " + "malloc(" + ref_size + "+1);\n"
-                                        for_read += "dummy->" + child.attrib["name"] + "["+ref_size+"]=" + "0;\n"
-                                        for_read += text.c_read_gen_2_no.replace("XXX", "dummy" + "->"+ child.attrib["name"] + array_subscript).replace("YYY", ref_size)
+                                        if "delimiter" in child.attrib:
+                                            delimiter = child.attrib["delimiter"]
+                                            for_read = "int32_t " + child.attrib["name"] + "_del_pos =" + text.c_read_until_delimiter_proto.replace("XXX", delimiter) + ";\n"
+                                            for_read += "dummy->" + child.attrib["name"] + "=" + "malloc(" + child.attrib["name"] + "_del_pos);\n"
+                                            for_read += text.c_read_gen_2_no.replace("XXX", "dummy" + "->"+ child.attrib["name"] + array_subscript).replace("YYY", child.attrib["name"]+"_del_pos")
+                                        else:
+                                            for_read = "dummy->" + child.attrib["name"] + " = " + "malloc(" + ref_size + "+1);\n"
+                                            for_read += "dummy->" + child.attrib["name"] + "["+ref_size+"]=" + "0;\n"
+                                            for_read += text.c_read_gen_2_no.replace("XXX", "dummy" + "->"+ child.attrib["name"] + array_subscript).replace("YYY", ref_size)
                                     else:
                                         for_read = text.c_read_gen_2.replace("XXX", "dummy" + "->"+ child.attrib["name"] + array_subscript).replace("YYY", ref_size)
                             else:
@@ -637,8 +645,10 @@ class CodeGen(object):
         struct_source.write(text.header_inttype)
         struct_source_c.write(text.c_read_leb_u_def + "\n")
         struct_source_c.write(text.c_read_leb_s_def + "\n")
+        struct_source_c.write(text.c_read_until_delimiter + "\n")
         struct_source.write(text.c_read_leb_128_u_sig + "\n")
         struct_source.write(text.c_read_leb_128_s_sig + "\n")
+        struct_source.write(text.c_read_until_delimiter_sig + "\n")
         #struct_source.write(text.c_read_leb_macro_defs + "\n")
         if self.argparser.args.structsinclude:
             copy(self.argparser.args.structsinclude, self.argparser.args.outdir)

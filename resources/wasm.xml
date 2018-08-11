@@ -40,9 +40,7 @@
       <PayloadLength name="payloadlength" type="uint32" encoding="leb128u"/>
       <NameLength name="namelength" type="uint32" encoding="leb128u"/>
       <Name name="name" type="string" size="self::NameLength"/>
-      <!--
-      <Count name="count" encoding="leb128u" type="uint32" count="1"/>
-      -->
+      <!--<Count name="count" encoding="leb128u" type="uint32" count="1"/>-->
       <Entries name="entries" type="self::Memory_Type" count="1"/>
     </Memory_Section>
     <Global_Section name="W_Global_Section" count="1" type="" isaggregate="true" unordered="true">
@@ -102,8 +100,7 @@
   </Read>
   <Definition>
     <Init_Expr name="init_expr_t" isaggregate="true">
-      <Size name="size" encoding="leb128u" type="varuint32" count="1"></Size>
-      <Code name="code" type="string" count="1" size="self::Size"></Code>
+      <Code name="code" type="string" count="1" size="-1" delimiter="11"></Code>
     </Init_Expr>
     <Resizable_Limit name="resizable_limit_t" isaggregate="true">
       <Flags name="flags" encoding="leb128u" type="uint8" count="1"></Flags>
@@ -159,7 +156,7 @@
     </Element_Segment>
     <Local_Entry name="W_Local_Entry" isaggregate="true">
       <Count name="count" encoding="leb128u" type="uint32" count="1"/>
-      <Type name="type" encoding="leb128u" type="int16" count="self::Count"/>
+      <Type name="type" encoding="leb128u" type="uint16" count="self::Count"/>
     </Local_Entry>
     <Function_Body name="W_Function_Body" isaggregate="true">
       <Body_size name="body_size" encoding="leb128u" type="uint32" count="1"/>
