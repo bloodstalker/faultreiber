@@ -125,6 +125,16 @@ int main (int argc, char** argv) {
       printf("%c ", W_Data_Section_container->entries[i]->data[j]);
     }
     printf("\n");
+    int j = 0;
+    printf("offset:\n");
+    while(1) {
+      printf("%02x ", W_Data_Section_container->entries[i]->offset->code[j]);
+      if (W_Data_Section_container->entries[i]->offset->code[j] == 11) {
+        break;
+      }
+      j++;
+    }
+    printf("\n");
   }
 
   release_all();
