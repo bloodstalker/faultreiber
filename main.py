@@ -244,7 +244,8 @@ class CodeGen(object):
         pass
 
     def init(self):
-        dupemake(self.argparser.args.outdir, self.argparser.args.targetname)
+        #dupemake(self.argparser.args.outdir, self.argparser.args.targetname)
+        pass
 
     def dump_elems(self):
         for elem in self.elems:
