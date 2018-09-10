@@ -9,6 +9,7 @@ import readline
 from shutil import copy
 import signal
 import sys
+import os
 from text import text
 import datetime
 import xml.etree.ElementTree
@@ -192,7 +193,11 @@ class C_Obj():
         self.malloc = str
         self.ancestry = ancestry
 
+def get_script_path():
+    return os.path.dirname(os.path.realpath(sys.argv[0]))
+
 def dupemake(path, main_name):
+    os.chdir(get_script_path())
     copy("./resources/makefile", path)
     makefile_path = get_full_path(path, "makefile")
     for line in fileinput.input(makefile_path, inplace=True):
