@@ -171,6 +171,7 @@ class Argparser(object):
         parser.add_argument("--structs", type=str, help="the structs json file")
         parser.add_argument("--structsinclude", type=str, help="the path to the header that's going to be included by structs.h before structure declarations.")
         parser.add_argument("--xml", type=str, help="paht to the xml file")
+        parser.add_argument("--name", type=str, help="will be used to create some names in the source code")
         parser.add_argument("--dbg", action="store_true", help="debug", default=False)
         parser.add_argument("--datetime", action="store_true", help="print date and time in autogen files", default=False)
         parser.add_argument("--inline", action="store_true", help="inlines reader funcs", default=False)
@@ -517,7 +518,7 @@ class CodeGen(object):
                 count_int = 0
                 count_void = 0
         void_source.write("}\n")
-        void_source.write("void read_aggr(int _fd) {\n")
+        void_source.write("void read_aggr_"+self.argparser.args.name+"(int _fd) {\n")
         for elem in self.read_elems:
             if "isaggregate" in elem.attrib:
                 for child in elem:
@@ -530,7 +531,8 @@ class CodeGen(object):
     def gen_aggregate_read(self):
         agg_source = open(self.aggregate_source, "a")
         agg_source_h = open(self.aggregate_source_h, "a")
-        agg_source_h.write("void read_aggr(int _fd);\n")
+        print(self.argparser.args.name)
+        agg_source_h.write("void read_aggr_"+self.argparser.args.name+"(int _fd);\n")
         agg_source.write("uint8_t eof = 0U;")
         for elem in self.read_elems:
             if "unorderedbegin" in elem.attrib:

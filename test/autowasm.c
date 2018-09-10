@@ -12,7 +12,7 @@
 #pragma weak main
 int main (int argc, char** argv) {
   int wasm = open("./test.wasm", O_RDONLY);
-  read_aggr(wasm);
+  read_aggr_wasm(wasm);
 
   printf("magic_number:%x\n", magic_number_container->magic_number);
   printf("version:%x\n", version_container->version);
