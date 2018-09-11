@@ -15,8 +15,8 @@ class text():
     #c_read_elem_sig = "void ft_read_YYY(int _fd, XXX* dummyZZZ) {\n"
     #c_read_elem_sig = "void ft_read_YYY(int _fd, XXX* dummy) {\n"
     #c_read_elem_sig_h = "void ft_read_YYY(int _fd, XXX* dummy);\n"
-    c_read_elem_sig = "void* ft_read_YYY(int _fd, XXX* dummy, void** void_train, uint64_t* current_void_size, uint64_t* current_void_count) {\n"
-    c_read_elem_sig_h = "void* ft_read_YYY(int _fd, XXX* dummy, void** void_train, uint64_t* current_void_size, uint64_t* current_void_count);\n"
+    c_read_elem_sig = "void* ft_read_YYY(int _fd, XXX** dummy, void*** void_train, uint64_t* current_void_size, uint64_t* current_void_count) {\n"
+    c_read_elem_sig_h = "void* ft_read_YYY(int _fd, XXX** dummy, void*** void_train, uint64_t* current_void_size, uint64_t* current_void_count);\n"
     c_read_elem_sig_1 = "ft_read_XXX(_fd)"
     c_read_elem_sig_2 = "ft_read_XXX(_fd, YYY, ZZZ, current_void_size, current_void_count)"
     c_open_file = "int ft_read_file = open(_ft_file_path, RDONLY);\n"
@@ -83,27 +83,27 @@ int32_t read_until_delimiter(int _fd, uint8_t delimiter) {
 }"""
 
     c_void_manager = """
-void void_manager(void* ptr, void** void_train, uint64_t* current_void_size, uint64_t* current_void_count) {
-  if (current_void_size == 0) {
-    void_train = malloc(100*sizeof(void*));
-    current_void_size = 100;
+void void_manager(void* ptr, void*** void_train, uint64_t* current_void_size, uint64_t* current_void_count) {
+  if (*current_void_size == 0) {
+    *void_train = malloc(100*sizeof(void*));
+    *current_void_size = 100;
   }
-  if (current_void_count == current_void_size) {
+  if (*current_void_count == *current_void_size) {
     *current_void_size*=2;
-    void_train = realloc(void_train, *current_void_size*sizeof(void*));
-    if (void_train == NULL) {
+    *void_train = realloc(*void_train, *current_void_size*sizeof(void*));
+    if (*void_train == NULL) {
       printf("void train couldnt allocate more memory.\\n");
     }
   }
-  void_train[*current_void_count] = ptr;
-  *current_void_count++;
+  (*void_train)[*current_void_count] = ptr;
+  ++*current_void_count;
 }"""
 
     c_read_leb_128_s_sig = "int64_t read_leb_128_s(int _fd, int max_size);\n"
     c_read_leb_128_u_sig = "uint64_t read_leb_128_u(int _fd, int max_size);\n"
     c_read_until_delimiter_sig = "int32_t read_until_delimiter(int _fd, uint8_t delimiter);\n"
     c_read_until_delimiter_proto = "read_until_delimiter(_fd, XXX)"
-    c_void_manager_sig = "void void_manager(void* ptr, void** void_train, uint64_t* current_void_size, uint64_t* current_void_count);"
+    c_void_manager_sig = "void void_manager(void* ptr, void*** void_train, uint64_t* current_void_size, uint64_t* current_void_count);"
     c_void_manager_proto = "void_manager(XXX, void_train, current_void_size, current_void_count);"
 
     c_read_leb_macro_defs = """

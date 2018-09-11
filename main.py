@@ -299,8 +299,8 @@ class CodeGen(object):
             if "isaggregate" in elem.attrib:
                 dummy_string += ", " + elem.attrib["name"] + "*"  + " dummy_" + elem.attrib["name"]
                 read_source.write(static + inline + text.c_read_elem_sig.replace("YYY", elem.attrib["name"]).replace("XXX", elem.attrib["name"]+pointer))
-                read_source.write("dummy = malloc(sizeof(" + elem.attrib["name"] + "));\n")
-                read_source.write(text.c_void_manager_proto.replace("XXX", "dummy"));
+                read_source.write("*dummy = malloc(sizeof(" + elem.attrib["name"] + "));\n")
+                read_source.write(text.c_void_manager_proto.replace("XXX", "(*dummy)"));
                 self.malloc_list.append(C_Obj(elem.attrib["name"], [elem.tag]))
                 count = get_elem_count(elem)
                 if count == 1:
@@ -316,7 +316,7 @@ class CodeGen(object):
                             if "delimiter" in child.attrib:
                                 ref_size = ""
                             else:
-                                ref_size = "dummy->" + get_node_name(child.attrib["size"][6:], elem)
+                                ref_size = "(*dummy)->" + get_node_name(child.attrib["size"][6:], elem)
                         if "conditional" in child.attrib:
                             cond_name = get_node_name(child.attrib["condition"][6:], elem)
                             for cond in child:
@@ -324,79 +324,79 @@ class CodeGen(object):
                                 ref_node_name = type_resolver(cond, self.def_elems)
                                 ref_node = get_def_node(ref_node_name, self.def_elems)
                                 if ref_node:
-                                    read_source.write("if (dummy->" + cond_name + "==" + str(cond.text) + "){\n")
-                                    read_source.write("dummy->" + cond.attrib["name"] + "=malloc(sizeof(" + ref_node.attrib["name"] + "));")
-                                    read_source.write(text.c_void_manager_proto.replace("XXX", "dummy->" + cond.attrib["name"]));
+                                    read_source.write("if ((*dummy)->" + cond_name + "==" + str(cond.text) + "){\n")
+                                    read_source.write("(*dummy)->" + cond.attrib["name"] + "=malloc(sizeof(" + ref_node.attrib["name"] + "));")
+                                    read_source.write(text.c_void_manager_proto.replace("XXX", "(*dummy)->" + cond.attrib["name"]));
                                     self.malloc_list.append(C_Obj(ref_node.attrib["name"], [elem.tag, child.tag]))
                                     if child_count == 1:
-                                        for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "dummy->" + cond.attrib["name"]).replace("ZZZ", "void_train") + ";\n"
+                                        for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + cond.attrib["name"]).replace("ZZZ", "void_train") + ";\n"
                                         read_source.write(for_read)
                                     elif child_count > 1:
-                                        for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "dummy->" + cond.attrib["name"] + "[i]").replace("ZZZ", "void_train") + ";\n"
+                                        for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + cond.attrib["name"] + "[i]").replace("ZZZ", "void_train") + ";\n"
                                         read_source.write(for_read)
                                     else: # child_count == -1
                                         count_name_str = cond.attrib["count"][6:]
-                                        read_source.write("if (" + "dummy->" + get_node_name(count_name_str, elem) + ")\n")
-                                        read_source.write("dummy->" + cond.attrib["name"] + " = " + "malloc(sizeof(void*)*" + "dummy->" + get_node_name(count_name_str, child) + ");\n")
-                                        read_source.write(text.c_void_manager_proto.replace("XXX", "dummy->" + cond.attri["name"]));
-                                        self.malloc_list.append(C_Obj("sizeof(void*)*dummy->"+get_node_name(count_name_str, child), [elem.attrib["name"], child.attrib["name"], cond.arrtib["name"]]))
-                                        for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "dummy->" + cond.attrib["name"] + "[i]").replace("ZZZ", "void_train") + ";\n"
-                                        read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "dummy->" + get_node_name(count_name_str, child)))
+                                        read_source.write("if (" + "(*dummy)->" + get_node_name(count_name_str, elem) + ")\n")
+                                        read_source.write("(*dummy)->" + cond.attrib["name"] + " = " + "malloc(sizeof(void*)*" + "(*dummy)->" + get_node_name(count_name_str, child) + ");\n")
+                                        read_source.write(text.c_void_manager_proto.replace("XXX", "(*dummy)->" + cond.attri["name"]));
+                                        self.malloc_list.append(C_Obj("sizeof(void*)*(*dummy)->"+get_node_name(count_name_str, child), [elem.attrib["name"], child.attrib["name"], cond.arrtib["name"]]))
+                                        for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + cond.attrib["name"] + "[i]").replace("ZZZ", "void_train") + ";\n"
+                                        read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "(*dummy)->" + get_node_name(count_name_str, child)))
                                     read_source.write("}\n")
                                 else:
-                                    read_source.write("if (dummy->" + cond_name + "==" + str(cond.text) + "){\n")
-                                    read_source.write("dummy->" + cond.attrib["name"] + "=malloc(sizeof(" + ref_node_name  + "));")
-                                    read_source.write(text.c_void_manager_proto.replace("XXX", "dummy->" + cond.attrib["name"]));
+                                    read_source.write("if ((*dummy)->" + cond_name + "==" + str(cond.text) + "){\n")
+                                    read_source.write("(*dummy)->" + cond.attrib["name"] + "=malloc(sizeof(" + ref_node_name  + "));")
+                                    read_source.write(text.c_void_manager_proto.replace("XXX", "(*dummy)->" + cond.attrib["name"]));
                                     for_read = str()
                                     if child_count == 1: array_subscript = ""
                                     elif child_count > 1: array_subscript = "[i]"
                                     else: array_subscript = "[i]"
                                     if "size" in cond.attrib:
                                         if "encoding" in cond.attrib:
-                                            for_read = "dummy->" + cond.attrib["name"] + array_subscript + "=" + get_encoding_read(cond.attrib["encoding"])
+                                            for_read = "(*dummy)->" + cond.attrib["name"] + array_subscript + "=" + get_encoding_read(cond.attrib["encoding"])
                                         else:
                                             if cond.attrib["name"] == "string":
-                                                for_read = "dummy->" + cond.attrib["name"] + " = " + "malloc(" + ref_size + "+1);\n"
-                                                read_source.write(text.c_void_manager_proto.replace("XXX", "dummy->" + cond.attrib["name"]));
-                                                for_read += "dummy->" + cond.attrib["name"] + "["+ref_size+"]=" + "0;\n"
-                                                for_read = text.c_read_gen_2_no.replace("XXX", "dummy" + "->"+ cond.attrib["name"] + array_subscript).replace("YYY", ref_size)
+                                                for_read = "(*dummy)->" + cond.attrib["name"] + " = " + "malloc(" + ref_size + "+1);\n"
+                                                read_source.write(text.c_void_manager_proto.replace("XXX", "(*dummy)->" + cond.attrib["name"]));
+                                                for_read += "(*dummy)->" + cond.attrib["name"] + "["+ref_size+"]=" + "0;\n"
+                                                for_read = text.c_read_gen_2_no.replace("XXX", "(*dummy)" + "->"+ cond.attrib["name"] + array_subscript).replace("YYY", ref_size)
                                             else:
-                                                for_read = text.c_read_gen_2.replace("XXX", "dummy" + "->"+ cond.attrib["name"] + array_subscript).replace("YYY", ref_size)
+                                                for_read = text.c_read_gen_2.replace("XXX", "(*dummy)" + "->"+ cond.attrib["name"] + array_subscript).replace("YYY", ref_size)
                                     else:
                                         if "encoding" in cond.attrib:
-                                            for_read = "dummy->" + cond.attrib["name"] + array_subscript + " = " + get_encoding_read(cond.attrib["encoding"])
+                                            for_read = "(*dummy)->" + cond.attrib["name"] + array_subscript + " = " + get_encoding_read(cond.attrib["encoding"])
                                         else:
                                             if cond.attrib["type"] == "string":
-                                                for_read = text.c_read_gen_no.replace("XXX", "dummy" + "->" + cond.attrib["name"] + array_subscript).replace("YYY", ref_node_name)
+                                                for_read = text.c_read_gen_no.replace("XXX", "(*dummy)" + "->" + cond.attrib["name"] + array_subscript).replace("YYY", ref_node_name)
                                             else:
-                                                for_read = text.c_read_gen.replace("XXX", "dummy" + "->" + cond.attrib["name"] + array_subscript).replace("YYY", ref_node_name)
+                                                for_read = text.c_read_gen.replace("XXX", "(*dummy)" + "->" + cond.attrib["name"] + array_subscript).replace("YYY", ref_node_name)
                                     if child_count == 1:
                                         read_source.write(for_read)
                                     elif child_count > 1:
                                         read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", str(child_count)))
                                     else: # child_count = -1
                                         count_name_str = cond.attrib["count"][6:]
-                                        read_source.write("dummy->" + cond.attrib["name"] + " = " + "malloc(sizeof(" + type_resolver(cond, self.def_elems + self.read_elems)  + ")*" + "dummy->" + get_node_name(count_name_str, elem) + ");\n")
-                                        read_source.write(text.c_void_manager_proto.replace("XXX", "dummy->" + cond.attrib["name"]));
-                                        read_source.write("if (" + "dummy->" + get_node_name(count_name_str, child) + ")\n")
-                                        read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "dummy->" + get_node_name(count_name_str, elem)))
+                                        read_source.write("(*dummy)->" + cond.attrib["name"] + " = " + "malloc(sizeof(" + type_resolver(cond, self.def_elems + self.read_elems)  + ")*" + "(*dummy)->" + get_node_name(count_name_str, elem) + ");\n")
+                                        read_source.write(text.c_void_manager_proto.replace("XXX", "(*dummy)->" + cond.attrib["name"]));
+                                        read_source.write("if (" + "(*dummy)->" + get_node_name(count_name_str, child) + ")\n")
+                                        read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "(*dummy)->" + get_node_name(count_name_str, elem)))
                                     read_source.write("}\n")
                             continue
                         if ref_node:
                             ref_node_name = pointer_remover(ref_node.attrib["name"])
                             if child_count == 1:
-                                for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "dummy->" + child.attrib["name"]).replace("ZZZ", "void_train") + ";\n"
-                                read_source.write("dummy->" + child.attrib["name"] + "=" + for_read)
+                                for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"]).replace("ZZZ", "void_train") + ";\n"
+                                read_source.write("(*dummy)->" + child.attrib["name"] + "=" + for_read)
                             elif child_count > 1:
-                                for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "dummy->" + child.attrib["name"] + "[i]").replace("ZZZ", "void_train") + ";\n"
-                                read_source.write("dummy->" + child.attrib["name"] + "=" + for_read)
+                                for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", "void_train") + ";\n"
+                                read_source.write("(*dummy)->" + child.attrib["name"] + "=" + for_read)
                             else: # child_count == -1
                                 count_name_str = child.attrib["count"][6:]
-                                read_source.write("if (" + "dummy->" + get_node_name(count_name_str, elem) + ")\n")
-                                read_source.write("dummy->" + child.attrib["name"] + " = " + "malloc(sizeof(void*)*" + "dummy->" + get_node_name(count_name_str, elem) + ");\n")
-                                read_source.write(text.c_void_manager_proto.replace("XXX", "dummy->" + child.attrib["name"]));
-                                for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "dummy->" + child.attrib["name"] + "[i]").replace("ZZZ", "void_train") + ";\n"
-                                read_source.write(text.simple_loop.replace("YYY", "dummy->" + child.attrib["name"] + "[i]=" + for_read).replace("XXX", "dummy->" + get_node_name(count_name_str, elem)))
+                                read_source.write("if (" + "(*dummy)->" + get_node_name(count_name_str, elem) + ")\n")
+                                read_source.write("(*dummy)->" + child.attrib["name"] + " = " + "malloc(sizeof(void*)*" + "(*dummy)->" + get_node_name(count_name_str, elem) + ");\n")
+                                read_source.write(text.c_void_manager_proto.replace("XXX", "(*dummy)->" + child.attrib["name"]));
+                                for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", "void_train") + ";\n"
+                                read_source.write(text.simple_loop.replace("YYY", "(*dummy)->" + child.attrib["name"] + "[i]=" + for_read).replace("XXX", "(*dummy)->" + get_node_name(count_name_str, elem)))
                         else:
                             for_read = str()
                             if child_count == 1: array_subscript = ""
@@ -404,40 +404,40 @@ class CodeGen(object):
                             else: array_subscript = "[i]"
                             if "size" in child.attrib:
                                 if "encoding" in child.attrib:
-                                    for_read = "dummy->" + child.attrib["name"] + array_subscript + "=" + get_encoding_read(child.attrib["encoding"])
+                                    for_read = "(*dummy)->" + child.attrib["name"] + array_subscript + "=" + get_encoding_read(child.attrib["encoding"])
                                 else:
                                     if child.attrib["type"] == "string":
                                         if "delimiter" in child.attrib:
                                             delimiter = child.attrib["delimiter"]
                                             for_read = "int32_t " + child.attrib["name"] + "_del_pos =" + text.c_read_until_delimiter_proto.replace("XXX", delimiter) + ";\n"
-                                            for_read += "dummy->" + child.attrib["name"] + "=" + "malloc(" + child.attrib["name"] + "_del_pos);\n"
-                                            for_read +=text.c_void_manager_proto.replace("XXX", "dummy->" + child.attrib["name"]);
-                                            for_read += text.c_read_gen_2_no.replace("XXX", "dummy" + "->"+ child.attrib["name"] + array_subscript).replace("YYY", child.attrib["name"]+"_del_pos")
+                                            for_read += "(*dummy)->" + child.attrib["name"] + "=" + "malloc(" + child.attrib["name"] + "_del_pos);\n"
+                                            for_read +=text.c_void_manager_proto.replace("XXX", "(*dummy)->" + child.attrib["name"]);
+                                            for_read += text.c_read_gen_2_no.replace("XXX", "(*dummy)" + "->"+ child.attrib["name"] + array_subscript).replace("YYY", child.attrib["name"]+"_del_pos")
                                         else:
-                                            for_read = "dummy->" + child.attrib["name"] + " = " + "malloc(" + ref_size + "+1);\n"
-                                            for_read += text.c_void_manager_proto.replace("XXX", "dummy->" + child.attrib["name"]);
-                                            for_read += "dummy->" + child.attrib["name"] + "["+ref_size+"]=" + "0;\n"
-                                            for_read += text.c_read_gen_2_no.replace("XXX", "dummy" + "->"+ child.attrib["name"] + array_subscript).replace("YYY", ref_size)
+                                            for_read = "(*dummy)->" + child.attrib["name"] + " = " + "malloc(" + ref_size + "+1);\n"
+                                            for_read += text.c_void_manager_proto.replace("XXX", "(*dummy)->" + child.attrib["name"]);
+                                            for_read += "(*dummy)->" + child.attrib["name"] + "["+ref_size+"]=" + "0;\n"
+                                            for_read += text.c_read_gen_2_no.replace("XXX", "(*dummy)" + "->"+ child.attrib["name"] + array_subscript).replace("YYY", ref_size)
                                     else:
-                                        for_read = text.c_read_gen_2.replace("XXX", "dummy" + "->"+ child.attrib["name"] + array_subscript).replace("YYY", ref_size)
+                                        for_read = text.c_read_gen_2.replace("XXX", "(*dummy)" + "->"+ child.attrib["name"] + array_subscript).replace("YYY", ref_size)
                             else:
                                 if "encoding" in child.attrib:
-                                    for_read = "dummy->" + child.attrib["name"] + array_subscript + " = " + get_encoding_read(child.attrib["encoding"])
+                                    for_read = "(*dummy)->" + child.attrib["name"] + array_subscript + " = " + get_encoding_read(child.attrib["encoding"])
                                 else:
                                     if child.attrib["type"] == "string":
-                                        for_read = text.c_read_gen_no.replace("XXX", "dummy" + "->" + child.attrib["name"] + array_subscript).replace("YYY", ref_node_name)
+                                        for_read = text.c_read_gen_no.replace("XXX", "(*dummy)" + "->" + child.attrib["name"] + array_subscript).replace("YYY", ref_node_name)
                                     else:
-                                        for_read = text.c_read_gen.replace("XXX", "dummy" + "->" + child.attrib["name"] + array_subscript).replace("YYY", ref_node_name)
+                                        for_read = text.c_read_gen.replace("XXX", "(*dummy)" + "->" + child.attrib["name"] + array_subscript).replace("YYY", ref_node_name)
                             if child_count == 1:
                                 read_source.write(for_read)
                             elif child_count > 1:
                                 read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", str(child_count)))
                             else: # child_count = -1
                                 count_name_str = child.attrib["count"][6:]
-                                read_source.write("dummy->" + child.attrib["name"] + " = " + "malloc(sizeof(" + type_resolver(child, self.def_elems + self.read_elems)  + ")*" + "dummy->" + get_node_name(count_name_str, elem) + ");\n")
-                                read_source.write(text.c_void_manager_proto.replace("XXX", "dummy->" + child.attrib["name"]));
-                                read_source.write("if (" + "dummy->" + get_node_name(count_name_str, elem) + ")\n")
-                                read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "dummy->" + get_node_name(count_name_str, elem)))
+                                read_source.write("(*dummy)->" + child.attrib["name"] + " = " + "malloc(sizeof(" + type_resolver(child, self.def_elems + self.read_elems)  + ")*" + "(*dummy)->" + get_node_name(count_name_str, elem) + ");\n")
+                                read_source.write(text.c_void_manager_proto.replace("XXX", "(*dummy)->" + child.attrib["name"]));
+                                read_source.write("if (" + "(*dummy)->" + get_node_name(count_name_str, elem) + ")\n")
+                                read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "(*dummy)->" + get_node_name(count_name_str, elem)))
                 else:
                     pass
             # if not aggregate
@@ -446,10 +446,10 @@ class CodeGen(object):
             # instances with the same name
             else:
                 read_source.write(static + inline + text.c_read_elem_sig.replace("YYY", elem.attrib["name"]).replace("XXX", elem.attrib["name"]+pointer))
-                read_source.write("dummy = malloc(sizeof(" + elem.attrib["name"] + "));\n")
+                read_source.write("*dummy = malloc(sizeof(" + elem.attrib["name"] + "));\n")
                 read_source.write(text.c_void_manager_proto.replace("XXX", "dummy"));
-                read_source.write(text.c_read_gen.replace("XXX", "dummy->" + elem.attrib["name"]).replace("YYY", type_resolver(elem, self.def_elems)))
-            read_source.write("return dummy;\n")
+                read_source.write(text.c_read_gen.replace("XXX", "(*dummy)->" + elem.attrib["name"]).replace("YYY", type_resolver(elem, self.def_elems)))
+            read_source.write("return *dummy;\n")
             read_source.write(text.c_function_close + "\n")
         read_source_header = open(self.argparser.args.outdir + "/read.h", "w")
         read_source_header.write("#ifndef FT_READ_H\n#define FT_READ_H\n")
@@ -493,8 +493,8 @@ class CodeGen(object):
         void_source_h.write("typedef struct {\n")
         void_source_h.write(self.argparser.args.name + "_obj_t* obj;\n")
         void_source_h.write("void** void_train;\n")
-        void_source_h.write("uint64_t* current_void_size;\n")
-        void_source_h.write("uint64_t* current_void_count;\n")
+        void_source_h.write("uint64_t current_void_size;\n")
+        void_source_h.write("uint64_t current_void_count;\n")
         void_source_h.write("}" + self.argparser.args.name + "_lib_ret_t;\n")
         # end
         #void_source.write("void malloc_all(void) {\n")
@@ -539,8 +539,8 @@ class CodeGen(object):
         void_source.write(self.argparser.args.name + "_lib_ret_t* read_aggr_"+self.argparser.args.name+"(int _fd) {\n")
         void_source.write("register " + self.argparser.args.name + "_lib_ret_t* lib_ret = malloc(sizeof("+self.argparser.args.name+"_lib_ret_t"+"));\n")
         void_source.write("lib_ret->obj = malloc(sizeof("+self.argparser.args.name+"_obj_t"+"));\n")
-        void_source.write("lib_ret->current_void_size = malloc(sizeof(uint64_t*));\n")
-        void_source.write("lib_ret->current_void_count = malloc(sizeof(uint64_t*));\n")
+        #void_source.write("lib_ret->current_void_size = malloc(sizeof(uint64_t*));\n")
+        #void_source.write("lib_ret->current_void_count = malloc(sizeof(uint64_t*));\n")
         for elem in self.read_elems:
             if "isaggregate" in elem.attrib:
                 for child in elem:
@@ -571,12 +571,12 @@ class CodeGen(object):
                         agg_source.write(text.c_read_gen.replace("XXX", sign_name).replace("YYY", sign_type))
                         agg_source.write("lseek(_fd, -sizeof(" + sign_type + "), SEEK_CUR);\n")
                         agg_source.write("if (" + sign_name + "==" + child.text + "){\n")
-            agg_source.write("lib_ret->obj->"+elem.attrib["name"] + "_container = " + "ft_read_" + elem.attrib["name"] + "(_fd, lib_ret->obj->" + elem.attrib["name"] + "_container, "  + "lib_ret->void_train, lib_ret->current_void_size, lib_ret->current_void_count);\n")
+            agg_source.write("lib_ret->obj->"+elem.attrib["name"] + "_container = " + "ft_read_" + elem.attrib["name"] + "(_fd, &lib_ret->obj->" + elem.attrib["name"] + "_container, "  + "&lib_ret->void_train, &lib_ret->current_void_size, &lib_ret->current_void_count);\n")
             if "unordered" in elem.attrib: agg_source.write("}\n")
 
             if "unorderedend" in elem.attrib:
                 agg_source.write("}while(0);\n")
-            agg_source.write("return lib_ret;\n")
+        agg_source.write("return lib_ret;\n")
         agg_source.write("}\n")
 
     #FIXME-not handling double pointers

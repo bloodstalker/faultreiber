@@ -14,10 +14,12 @@
 int main (int argc, char** argv) {
   int wasm = open("./test.wasm", O_RDONLY);
   wasm_lib_ret_t* lib_ret = read_aggr_wasm(wasm);
+  printf("finished reading\n");
 
   printf("magic_number:%x\n", lib_ret->obj->magic_number_container->magic_number);
   printf("version:%x\n", lib_ret->obj->version_container->version);
 
+  printf("fuck\n");
   printf("type section id:%d\n", lib_ret->obj->W_Type_Section_container->id);
   printf("type section payloadlength:%d\n", lib_ret->obj->W_Type_Section_container->payloadlength);
   printf("type_section entry count:%d\n", lib_ret->obj->W_Type_Section_container->count);

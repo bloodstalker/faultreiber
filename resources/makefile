@@ -82,10 +82,10 @@ $(TARGET): $(TARGET).o read.o aggregate.o structs.o
 $(TARGET)-static: $(TARGET).o read.o aggregate.o structs.o
 	$(CC) $^ $(LD_FLAGS) -static -o $@
 
-$(TARGET)-dbg: $(TARGET).odbg read.o aggregate.o structs.o
+$(TARGET)-dbg: $(TARGET).odbg read.odbg aggregate.odbg structs.odbg
 	$(CC) $^ $(LD_FLAGS) -g -o $@
 
-$(TARGET)-cov: $(TARGET).ocov read.o aggregate.o structs.o
+$(TARGET)-cov: $(TARGET).ocov read.ocov aggregate.ocov structs.ocov
 	$(CC) $^ $(LD_FLAGS) $(COV_LD) -o $@
 
 cov:

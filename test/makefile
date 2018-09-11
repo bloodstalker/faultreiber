@@ -53,7 +53,7 @@ LD_FLAGS+=$(EXTRA_LD_FLAGS)
 
 .PHONY:all clean help ASM SO TAGS
 
-all:$(TARGET)
+all:$(TARGET) $(TARGET)-dbg
 
 everything:$(TARGET) A ASM SO $(TARGET)-static $(TARGET)-dbg TAGS $(TARGET)-cov
 
@@ -82,7 +82,7 @@ $(TARGET): $(TARGET).o read.o aggregate.o structs.o
 $(TARGET)-static: $(TARGET).o read.o aggregate.o structs.o
 	$(CC) $^ $(LD_FLAGS) -static -o $@
 
-$(TARGET)-dbg: $(TARGET).odbg read.o aggregate.o structs.o
+$(TARGET)-dbg: $(TARGET).odbg read.odbg aggregate.odbg structs.odbg
 	$(CC) $^ $(LD_FLAGS) -g -o $@
 
 $(TARGET)-cov: $(TARGET).ocov read.o aggregate.o structs.o
