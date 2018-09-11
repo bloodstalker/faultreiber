@@ -138,6 +138,6 @@ int main (int argc, char** argv) {
     printf("\n");
   }
 
-  release_all();
+  release_all(lib_ret->void_train, lib_ret->current_void_count);
   return 0;
 }

@@ -537,7 +537,7 @@ class CodeGen(object):
                 count_void = 0
         #void_source.write("}\n")
         void_source.write(self.argparser.args.name + "_lib_ret_t* read_aggr_"+self.argparser.args.name+"(int _fd) {\n")
-        void_source.write(self.argparser.args.name + "_lib_ret_t* lib_ret = malloc(sizeof("+self.argparser.args.name+"_lib_ret_t"+"));\n")
+        void_source.write("register " + self.argparser.args.name + "_lib_ret_t* lib_ret = malloc(sizeof("+self.argparser.args.name+"_lib_ret_t"+"));\n")
         void_source.write("lib_ret->obj = malloc(sizeof("+self.argparser.args.name+"_obj_t"+"));\n")
         void_source.write("lib_ret->current_void_size = malloc(sizeof(uint64_t*));\n")
         void_source.write("lib_ret->current_void_count = malloc(sizeof(uint64_t*));\n")
@@ -571,7 +571,7 @@ class CodeGen(object):
                         agg_source.write(text.c_read_gen.replace("XXX", sign_name).replace("YYY", sign_type))
                         agg_source.write("lseek(_fd, -sizeof(" + sign_type + "), SEEK_CUR);\n")
                         agg_source.write("if (" + sign_name + "==" + child.text + "){\n")
-            agg_source.write("lib_ret->obj->"+elem.attrib["name"] + "_container = " + "ft_read_" + elem.attrib["name"] + "(_fd, lib_ret->obj->" + elem.attrib["name"] + "_container, "  + "lib_ret->void_train);\n")
+            agg_source.write("lib_ret->obj->"+elem.attrib["name"] + "_container = " + "ft_read_" + elem.attrib["name"] + "(_fd, lib_ret->obj->" + elem.attrib["name"] + "_container, "  + "lib_ret->void_train, lib_ret->current_void_size, lib_ret->current_void_count);\n")
             if "unordered" in elem.attrib: agg_source.write("}\n")
 
             if "unorderedend" in elem.attrib:
@@ -583,8 +583,8 @@ class CodeGen(object):
     def gen_release(self):
         agg_source = open(self.aggregate_source, "a")
         agg_source_h = open(self.aggregate_source_h, "a")
-        agg_source_h.write("void release_all(void);\n")
-        agg_source.write("void release_all(void) {\n")
+        agg_source_h.write("void release_all(void** void_train, uint64_t current_void_count);\n")
+        agg_source.write("void release_all(void** void_train, uint64_t current_void_count) {\n")
         agg_source.write("for (int i=current_void_count-1;i>=0;--i) {\n")
         agg_source.write("free(void_train[i]);\n}\n")
         agg_source.write("free(void_train);\n")
