@@ -447,7 +447,7 @@ class CodeGen(object):
             else:
                 read_source.write(static + inline + text.c_read_elem_sig.replace("YYY", elem.attrib["name"]).replace("XXX", elem.attrib["name"]+pointer))
                 read_source.write("*dummy = malloc(sizeof(" + elem.attrib["name"] + "));\n")
-                read_source.write(text.c_void_manager_proto.replace("XXX", "dummy"));
+                read_source.write(text.c_void_manager_proto.replace("XXX", "*dummy"));
                 read_source.write(text.c_read_gen.replace("XXX", "(*dummy)->" + elem.attrib["name"]).replace("YYY", type_resolver(elem, self.def_elems)))
             read_source.write("return *dummy;\n")
             read_source.write(text.c_function_close + "\n")

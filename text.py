@@ -96,7 +96,7 @@ void void_manager(void* ptr, void*** void_train, uint64_t* current_void_size, ui
     }
   }
   (*void_train)[*current_void_count] = ptr;
-  ++*current_void_count;
+  (*current_void_count)++;
 }"""
 
     c_read_leb_128_s_sig = "int64_t read_leb_128_s(int _fd, int max_size);\n"

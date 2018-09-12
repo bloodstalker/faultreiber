@@ -118,6 +118,9 @@ $(TARGET).so: $(TARGET).o read.o aggregate.o structs.o
 $(TARGET).a: $(TARGET).o read.o aggregate.o structs.o
 	ar rcs $(TARGET).a $(TARGET).o
 
+valgrind: $(TARGET)
+	valgrind --leak-check=yes $(TARGET)
+
 clean:
 	rm -f *.o *.dis *.odbg *.ocov *~ $(TARGET) $(TARGET).so $(TARGET)-static $(TARGET)-dbg $(TARGET).a $(TARGET)-cov
 
