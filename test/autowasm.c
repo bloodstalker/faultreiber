@@ -34,7 +34,7 @@ int main (int argc, char** argv) {
   wasm_lib_ret_t* lib_ret = read_aggr_wasm(wasm);
   printf("finished reading\n");
 
-#if 0
+#if 1
   printf("magic_number:%x\n", lib_ret->obj->magic_number_container->magic_number);
   printf("version:%x\n", lib_ret->obj->version_container->version);
 
@@ -166,16 +166,18 @@ int main (int argc, char** argv) {
   printf("void_train first:0x%x\n", lib_ret->void_train[1]);
   printf("void_train self address:0x%x\n", lib_ret->void_train);
   //free(lib_ret->void_train[0]);
-  //release_all(lib_ret->void_train, lib_ret->current_void_count);
+  release_all_wasm(lib_ret->void_train, lib_ret->current_void_count);
   //free(lib_ret->void_train[2]);
   //free(lib_ret->void_train[1]);
   //free(lib_ret->void_train[0]);
+#if 0
   for (int i = lib_ret->current_void_count - 1; i >= 0; --i) {
     printf("%d:0x%x ", i, lib_ret->void_train[i]);
     //if (i == 1) continue;
     free(lib_ret->void_train[i]);
   }
-  free(lib_ret->void_train);
+#endif
+  //free(lib_ret->void_train);
   free(lib_ret->obj);
   free(lib_ret);
   return 0;
