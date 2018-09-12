@@ -1,12 +1,7 @@
 # faultreiber
-`faultreiber` generates a parser library in C for a structured file format. The input is an XML file that describes the format.<br/>
-The C source code will be in the form of multiple source and header files. a makefile is also included.<br/>
-The generated source code does not include a main.<br/>
-
-## faultreiber XML file
-The root node should have two childs, named exactly `READ` and `DEFINITION`(order not important).<br/>
-The `READ` node will include the actual structures that the parser will read and can return.<br/>
-The `DEFINITION` node includes the definitions for the structures that are aggregate.<br/>
+`faultreiber` generates a parser library in C for a structured (binary) file format. The input is an XML file that describes the format.<br/>
+The C source code will be in the form of multiple source and header files.<br/>
+The headers have header guards and are already `extern "C"`ed.<br/>
 
 ## Demo
 For a practical example, look at the example XML file under `resources`. The XML file describes the format of a WASM object file:<br/>
@@ -36,7 +31,12 @@ free(lib_ret->obj);
 free(lib_ret);
 ```
 
-### Rules:
+## faultreiber XML file
+The root node should have two childs, named exactly `READ` and `DEFINITION`(order not important).<br/>
+The `READ` node will include the actual structures that the parser will read and can return.<br/>
+The `DEFINITION` node includes the definitions for the structures that are aggregate.<br/>
+
+## Rules:
 
 Any child node of either `DEFINITION` or `READ` will have to at least have the attributes `name` and `type` defined. The presence of the attribute `count` is optional but if it's not present faultreiber will assume that the count is one.<br/>
 The presence of the attribute `isaggregate` signifies the fact that the data structure is composed of other smaller parts. faultreiber will only read the children of a node that is the child of either the `DEFINITION` or `READ` node(unless a child node has the attribute `conditional` set). If a data structure requires more children then you should add a new node under `DEFINITION` and reference that node from it's parent. In other words, an aggregate node can't itself have child nodes that are aggregate.<br/>
@@ -107,14 +107,13 @@ The `FT::conditional` tag for a type means that the actual content of the node w
   --name                will be used in generating some code identifiers
 ```
 
-
 ## limitations
 Big-Endian reads are not supported.<br/>
 None-byte-sized raw reads are not supported.<br/>
 
 ## makefile
 That would be on you but there is an example makefile in the `test` directory so you can take a look if you want.<br/>
-To get a list of the targets the makfile supports you can run its `help` target.<br/>
+You can also get generic ones from [here](https://github.com/bloodstalker/lazymakefiles). They're licensed under the Unlicense.<br/>
 
 ## TODO
 All the items under limitations.<br/>
@@ -125,4 +124,4 @@ The list of the projects that use faulreiber:<br/>
 * [bruiser](https://github.com/bloodstalker/mutator/tree/master/bruiser)<br/>
 
 ## License
-`faultreiber` along with the makefile, are provided under MIT. I'm not sure whether the generated code is considered "derived work", but if it is, then the generated code will also fall under MIT<br/>
+`faultreiber` is provided under MIT. I'm assuming(I'm not a lawyer) the generated code is considered "derived work". If it is, then the generated code will also fall under MIT.<br/>
