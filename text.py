@@ -103,8 +103,8 @@ void void_manager(void* ptr, void*** void_train, uint64_t* current_void_size, ui
     c_read_leb_128_u_sig = "uint64_t read_leb_128_u(int _fd, int max_size);\n"
     c_read_until_delimiter_sig = "int32_t read_until_delimiter(int _fd, uint8_t delimiter);\n"
     c_read_until_delimiter_proto = "read_until_delimiter(_fd, XXX)"
-    c_void_manager_sig = "void void_manager(void* ptr, void*** void_train, uint64_t* current_void_size, uint64_t* current_void_count);"
-    c_void_manager_proto = "void_manager(XXX, void_train, current_void_size, current_void_count);"
+    c_void_manager_sig = "void void_manager(void* ptr, void*** void_train, uint64_t* current_void_size, uint64_t* current_void_count);\n"
+    c_void_manager_proto = "void_manager(XXX, void_train, current_void_size, current_void_count);\n"
 
     c_read_leb_macro_defs = """
 #define READ_VAR_UINT_1(FD) read_leb128_u(FD, 1)

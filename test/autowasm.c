@@ -6,8 +6,8 @@
 #include <unistd.h>
 #include <sys/resource.h>
 
-#include "./structs.h"
-#include "./read.h"
+//#include "./structs.h"
+//#include "./read.h"
 #include "./aggregate.h"
 
 
