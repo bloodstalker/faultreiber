@@ -85,7 +85,7 @@ int32_t read_until_delimiter(int _fd, uint8_t delimiter) {
     c_void_manager = """
 void void_manager(void* ptr, void*** void_train, uint64_t* current_void_size, uint64_t* current_void_count) {
   if (*current_void_size == 0) {
-    *void_train = malloc(100*sizeof(void*));
+    *void_train = CCC(100*sizeof(void*));
     *current_void_size = 100;
   }
   if (*current_void_count == *current_void_size) {
@@ -128,3 +128,5 @@ void void_manager(void* ptr, void*** void_train, uint64_t* current_void_size, ui
     c_define_void_buff_size = "#define VOID_BUFF_SIZE XXX"
     c_define_void_buff_grow_fact = "#define VOID_BUFFER_GROW_FACTOR XXX"
     c_reserve_void_ptr = "malloc(XXX)"
+
+    ft_calloc_def="#define ft_calloc(X1) calloc(X1, 1)\n"
