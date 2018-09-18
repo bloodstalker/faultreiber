@@ -557,6 +557,7 @@ class CodeGen(object):
         #agg_source.write('#include "aggregate.h"\n')
         agg_source_h.write(self.argparser.args.name + "_lib_ret_t* read_aggr_"+self.argparser.args.name+"(int _fd);\n")
         agg_source.write("uint8_t eof = 0U;")
+        agg_source.write("lib_ret->current_void_count = 0;\n")
         for elem in self.read_elems:
             if "unorderedbegin" in elem.attrib:
                 agg_source.write("do {\n")
