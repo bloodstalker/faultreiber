@@ -85,11 +85,11 @@ int32_t read_until_delimiter(int _fd, uint8_t delimiter) {
     c_void_manager = """
 void void_manager(void* ptr, void*** void_train, uint64_t* current_void_size, uint64_t* current_void_count) {
   if (*current_void_size == 0) {
-    *void_train = CCC(100*sizeof(void*));
-    *current_void_size = 100;
+    *void_train = CCC(XXX*sizeof(void*));
+    *current_void_size = XXX;
   }
   if (*current_void_count == *current_void_size) {
-    *current_void_size*=2;
+    *current_void_size*=YYY;
     *void_train = realloc(*void_train, *current_void_size*sizeof(void*));
     if (*void_train == NULL) {
       printf("void train couldnt allocate more memory.\\n");
