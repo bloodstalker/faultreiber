@@ -48,11 +48,11 @@ def type_resolver(elem, elem_list):
     elif type_str == "bool":
         return "uint8_t"
     elif type_str == "uchar":
-        return "int8_t"
+        return "uint8_t"
     elif type_str == "schar":
         return "schar_t"
     elif type_str == "string":
-        return "char*"
+        return "unsigned char*"
     elif type_str == "FT::conditional":
         return "void*"
     elif type_str.find("self::") == 0:
