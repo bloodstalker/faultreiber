@@ -410,9 +410,10 @@ class CodeGen(object):
                                         if "delimiter" in child.attrib:
                                             delimiter = child.attrib["delimiter"]
                                             for_read = "int32_t " + child.attrib["name"] + "_del_pos =" + text.c_read_until_delimiter_proto.replace("XXX", delimiter) + ";\n"
-                                            for_read += "(*dummy)->" + child.attrib["name"] + "=" +alloc+"(" + child.attrib["name"] + "_del_pos);\n"
+                                            for_read += "(*dummy)->" + child.attrib["name"] + "=" +alloc+"(" + child.attrib["name"] + "_del_pos + 1);\n"
                                             for_read +=text.c_void_manager_proto.replace("XXX", "(*dummy)->" + child.attrib["name"]);
                                             for_read += text.c_read_gen_2_no.replace("XXX", "(*dummy)" + "->"+ child.attrib["name"] + array_subscript).replace("YYY", child.attrib["name"]+"_del_pos")
+                                            for_read += "(*dummy)->" + child.attrib["name"] + "[" + child.attrib["name"] + "_del_pos] = 0;\n"
                                         else:
                                             for_read = "(*dummy)->" + child.attrib["name"] + " = " + alloc+"(" + ref_size + "+1);\n"
                                             for_read += text.c_void_manager_proto.replace("XXX", "(*dummy)->" + child.attrib["name"]);
