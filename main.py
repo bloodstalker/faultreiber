@@ -553,7 +553,7 @@ class CodeGen(object):
     def gen_aggregate_read(self):
         agg_source = open(self.aggregate_source, "a")
         agg_source_h = open(self.aggregate_source_h, "a")
-        print(self.argparser.args.name)
+        #print(self.argparser.args.name)
         #agg_source.write('#include "aggregate.h"\n')
         agg_source_h.write(self.argparser.args.name + "_lib_ret_t* read_aggr_"+self.argparser.args.name+"(int _fd);\n")
         agg_source.write("uint8_t eof = 0U;")
