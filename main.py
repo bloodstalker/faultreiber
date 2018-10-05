@@ -318,7 +318,7 @@ class CodeGen(object):
                 if count_version: count_version_buffer += text.c_void_manager_proto.replace("XXX", "(*dummy)")
                 self.malloc_list.append(C_Obj(elem.attrib["name"], [elem.tag]))
                 count = get_elem_count(elem)
-                if count == 1:
+                if count == 1 or count != 1:
                     for child in elem:
                         child_count = get_elem_count(child)
                         ref_node_name = type_resolver(child, self.def_elems)
@@ -486,6 +486,7 @@ class CodeGen(object):
                                 read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", str(child_count)))
                                 if count_version:
                                     count_version_buffer += text.simple_loop.replace("YYY", for_read).replace("XXX", str(child_count))
+                                    count_version_buffer += "(*agg_b_count) += b_count;"
                             else: # child_count = -1
                                 count_name_str = child.attrib["count"][6:]
                                 read_source.write("(*dummy)->" + child.attrib["name"] + " = " +alloc+"(sizeof(" + type_resolver(child, self.def_elems + self.read_elems)  + ")*" + "(*dummy)->" + get_node_name(count_name_str, elem) + ");\n")
@@ -495,11 +496,13 @@ class CodeGen(object):
                                     count_version_buffer += "(*dummy)->" + child.attrib["name"] + " = " +alloc+"(sizeof(" + type_resolver(child, self.def_elems + self.read_elems)  + ")*" + "(*dummy)->" + get_node_name(count_name_str, elem) + ");\n"
                                     count_version_buffer += text.c_void_manager_proto.replace("XXX", "(*dummy)->" + child.attrib["name"])
                                     count_version_buffer += "if (" + "(*dummy)->" + get_node_name(count_name_str, elem) + ")\n"
+                                    count_version_buffer += "(*agg_b_count) += b_count;"
                                 if "sizeconst" in child.attrib:
                                     if child.attrib["sizeconst"] == "end":
                                         read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "(*dummy)->" + get_node_name(count_name_str, elem) + "- agg_b_count"))
                                 else:
                                     read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "(*dummy)->" + get_node_name(count_name_str, elem)))
+                # count != 1
                 else:
                     pass
             # if not aggregate
@@ -634,16 +637,33 @@ class CodeGen(object):
                 agg_source.write("do {\n")
 
             if "unordered" in elem.attrib:
-                for child in elem:
-                    if "issign" in child.attrib:
-                        sign_type = type_resolver(child, self.def_elems+ self.read_elems)
-                        sign_name = " dummy_" + child.attrib["name"] + elem.attrib["name"]
-                        agg_source.write("if (read(_fd, &eof, 1)<0) break;\nelse lseek(_fd, -1, SEEK_CUR);\n")
-                        agg_source.write(sign_type + sign_name + ";\n")
-                        agg_source.write(text.c_read_gen.replace("XXX", sign_name).replace("YYY", sign_type))
-                        agg_source.write("lseek(_fd, -sizeof(" + sign_type + "), SEEK_CUR);\n")
-                        agg_source.write("if (" + sign_name + "==" + child.text + "){\n")
-            agg_source.write("lib_ret->obj->"+elem.attrib["name"] + "_container = " + "ft_read_" + elem.attrib["name"] + "(_fd, &lib_ret->obj->" + elem.attrib["name"] + "_container, "  + "&lib_ret->void_train, &lib_ret->current_void_size, &lib_ret->current_void_count);\n")
+                if elem.attrib["count"] != "*":
+                    for child in elem:
+                        if "issign" in child.attrib:
+                            sign_type = type_resolver(child, self.def_elems+ self.read_elems)
+                            sign_name = " dummy_" + child.attrib["name"] + elem.attrib["name"]
+                            agg_source.write("if (read(_fd, &eof, 1)<0) break;\nelse lseek(_fd, -1, SEEK_CUR);\n")
+                            agg_source.write(sign_type + sign_name + ";\n")
+                            agg_source.write(text.c_read_gen.replace("XXX", sign_name).replace("YYY", sign_type))
+                            agg_source.write("lseek(_fd, -sizeof(" + sign_type + "), SEEK_CUR);\n")
+                            agg_source.write("if (" + sign_name + "==" + child.text + "){\n")
+                else: #count = "*"
+                    for child in elem:
+                        if "issign" in child.attrib:
+                            sign_type = type_resolver(child, self.def_elems+ self.read_elems)
+                            sign_name = " dummy_" + child.attrib["name"] + elem.attrib["name"]
+                            agg_source.write("uint64_t " + elem.attrib["name"] + "_agg_count = 0U;\n")
+                            agg_source.write("if (read(_fd, &eof, 1)<0) break;\nelse lseek(_fd, -1, SEEK_CUR);\n")
+                            agg_source.write(sign_type + sign_name + ";\n")
+                            agg_source.write(text.c_read_gen.replace("XXX", sign_name).replace("YYY", sign_type))
+                            agg_source.write("lseek(_fd, -sizeof(" + sign_type + "), SEEK_CUR);\n")
+                            agg_source.write("if (" + sign_name + "==" + child.text + "){\n")
+            if elem.attrib["count"] != "*":
+                agg_source.write("lib_ret->obj->"+elem.attrib["name"] + "_container = " + "ft_read_" + elem.attrib["name"] + "(_fd, &lib_ret->obj->" + elem.attrib["name"] + "_container, "  + "&lib_ret->void_train, &lib_ret->current_void_size, &lib_ret->current_void_count);\n")
+            else:
+                agg_source.write("lib_ret->obj->" + elem.attrib["name"] + "_container = realloc(lib_ret->obj->"+elem.attrib["name"]+"_container,"+"sizeof("+elem.attrib["name"]+")*("+elem.attrib["name"]+"_agg_count"+" +1));\n")
+                agg_source.write("lib_ret->obj->"+elem.attrib["name"] + "_container["+elem.attrib["name"]+"_agg_count"+"] = " + "ft_read_" + elem.attrib["name"] + "(_fd, &lib_ret->obj->" + elem.attrib["name"] + "_container["+elem.attrib["name"]+"_agg_count"+"], "  + "&lib_ret->void_train, &lib_ret->current_void_size, &lib_ret->current_void_count);\n")
+                agg_source.write(elem.attrib["name"] + "_agg_count++;\n")
             if "unordered" in elem.attrib: agg_source.write("}\n")
 
             if "unorderedend" in elem.attrib:
