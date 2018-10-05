@@ -291,16 +291,31 @@ class CodeGen(object):
             pointer = str()
             access = "."
             dummy_static = str()
+            count_version = False
+            count_version_buffer = str()
             if "isaggregate" in elem.attrib:
                 #pointer = "*"
                 pointer = ""
                 access = "->"
                 dummy_static = ""
             if "isaggregate" in elem.attrib:
+                # setting count_version here
+                if "countversion" in elem.attrib: count_version = True
+                else: count_version = False
                 dummy_string += ", " + elem.attrib["name"] + "*"  + " dummy_" + elem.attrib["name"]
                 read_source.write(static + inline + text.c_read_elem_sig.replace("YYY", elem.attrib["name"]).replace("XXX", elem.attrib["name"]+pointer))
                 read_source.write("*dummy = "+alloc+"(sizeof(" + elem.attrib["name"] + "));\n")
+                read_source.write("uint64_t b_count;\n")
+                if count_version:
+                    count_version_buffer = static + inline + text.c_read_elem_sig_c.replace("YYY", elem.attrib["name"]).replace("XXX", elem.attrib["name"]+pointer)
+                    count_version_buffer += "*dummy = "+alloc+"(sizeof(" + elem.attrib["name"] + "));\n"
+                    count_version_buffer += "uint64_t b_count;\n"
+                for sub in elem:
+                    if "sizeconst" in sub.attrib:
+                        read_source.write("uint64_t agg_b_count;\n")
+                        break
                 read_source.write(text.c_void_manager_proto.replace("XXX", "(*dummy)"));
+                if count_version: count_version_buffer += text.c_void_manager_proto.replace("XXX", "(*dummy)")
                 self.malloc_list.append(C_Obj(elem.attrib["name"], [elem.tag]))
                 count = get_elem_count(elem)
                 if count == 1:
@@ -331,8 +346,12 @@ class CodeGen(object):
                                     if child_count == 1:
                                         for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + cond.attrib["name"]).replace("ZZZ", "void_train") + ";\n"
                                         read_source.write(for_read)
+                                        if count_version:
+                                            count_version_buffer += for_read
                                     elif child_count > 1:
                                         for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + cond.attrib["name"] + "[i]").replace("ZZZ", "void_train") + ";\n"
+                                        if count_version:
+                                            count_version_buffer += for_read
                                         read_source.write(for_read)
                                     else: # child_count == -1
                                         count_name_str = cond.attrib["count"][6:]
@@ -343,6 +362,8 @@ class CodeGen(object):
                                         for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + cond.attrib["name"] + "[i]").replace("ZZZ", "void_train") + ";\n"
                                         read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "(*dummy)->" + get_node_name(count_name_str, child)))
                                     read_source.write("}\n")
+                                    if count_version:
+                                        count_version_buffer += for_read + "}\n"
                                 else:
                                     read_source.write("if ((*dummy)->" + cond_name + "==" + str(cond.text) + "){\n")
                                     read_source.write("(*dummy)->" + cond.attrib["name"] + "="+alloc+"(sizeof(" + ref_node_name  + "));")
@@ -385,18 +406,39 @@ class CodeGen(object):
                         if ref_node:
                             ref_node_name = pointer_remover(ref_node.attrib["name"])
                             if child_count == 1:
-                                for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"]).replace("ZZZ", "void_train") + ";\n"
+                                if "sizeconst" in child.attrib:
+                                    if "sizeconst" != "end":
+                                        for_read = text.c_read_elem_sig_2_c.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"]).replace("ZZZ", "void_train") + ";\n"
+                                else:
+                                    for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"]).replace("ZZZ", "void_train") + ";\n"
                                 read_source.write("(*dummy)->" + child.attrib["name"] + "=" + for_read)
+                                if count_version:
+                                    count_version_buffer += "(*dummy)->" + child.attrib["name"] + "=" + for_read
                             elif child_count > 1:
-                                for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", "void_train") + ";\n"
+                                if "sizeconst" in child.attrib:
+                                    if "sizeconst" != "end":
+                                        for_read = text.c_read_elem_sig_2_c.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", "void_train") + ";\n"
+                                else:
+                                    for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", "void_train") + ";\n"
                                 read_source.write("(*dummy)->" + child.attrib["name"] + "=" + for_read)
+                                if count_version:
+                                    count_version_buffer += "(*dummy)->" + child.attrib["name"] + "=" + for_read
                             else: # child_count == -1
                                 count_name_str = child.attrib["count"][6:]
                                 read_source.write("if (" + "(*dummy)->" + get_node_name(count_name_str, elem) + ")\n")
                                 read_source.write("(*dummy)->" + child.attrib["name"] + " = " +alloc+"(sizeof(void*)*" + "(*dummy)->" + get_node_name(count_name_str, elem) + ");\n")
                                 read_source.write(text.c_void_manager_proto.replace("XXX", "(*dummy)->" + child.attrib["name"]));
-                                for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", "void_train") + ";\n"
+                                if "sizeconst" in child.attrib:
+                                    if "sizeconst" != "end":
+                                        for_read = text.c_read_elem_sig_2_c.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", "void_train") + ";\n"
+                                else:
+                                    for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", "void_train") + ";\n"
                                 read_source.write(text.simple_loop.replace("YYY", "(*dummy)->" + child.attrib["name"] + "[i]=" + for_read).replace("XXX", "(*dummy)->" + get_node_name(count_name_str, elem)))
+                                if count_version:
+                                    count_version_buffer += text.simple_loop.replace("YYY", "(*dummy)->" + child.attrib["name"] + "[i]=" + for_read).replace("XXX", "(*dummy)->" + get_node_name(count_name_str, elem))
+                            if "sizeconst" in child.attrib:
+                                #read_source.write("XXXXX;\n")
+                                pass
                         else:
                             for_read = str()
                             if child_count == 1: array_subscript = ""
@@ -405,6 +447,9 @@ class CodeGen(object):
                             if "size" in child.attrib:
                                 if "encoding" in child.attrib:
                                     for_read = "(*dummy)->" + child.attrib["name"] + array_subscript + "=" + get_encoding_read(child.attrib["encoding"])
+                                    if "sizeconst" in child.attrib:
+                                        if child.attrib["sizeconst"] != "end":
+                                            for_read += "agg_b_count += b_count;"
                                 else:
                                     if child.attrib["type"] == "string":
                                         if "delimiter" in child.attrib:
@@ -424,6 +469,9 @@ class CodeGen(object):
                             else:
                                 if "encoding" in child.attrib:
                                     for_read = "(*dummy)->" + child.attrib["name"] + array_subscript + " = " + get_encoding_read(child.attrib["encoding"])
+                                    if "sizeconst" in child.attrib:
+                                        if child.attrib["sizeconst"] != "end":
+                                            for_read += "agg_b_count += b_count;"
                                 else:
                                     if child.attrib["type"] == "string":
                                         for_read = text.c_read_gen_no.replace("XXX", "(*dummy)" + "->" + child.attrib["name"] + array_subscript).replace("YYY", ref_node_name)
@@ -431,14 +479,27 @@ class CodeGen(object):
                                         for_read = text.c_read_gen.replace("XXX", "(*dummy)" + "->" + child.attrib["name"] + array_subscript).replace("YYY", ref_node_name)
                             if child_count == 1:
                                 read_source.write(for_read)
+                                if count_version:
+                                    count_version_buffer += for_read
+                                    count_version_buffer += "(*agg_b_count) += b_count;"
                             elif child_count > 1:
                                 read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", str(child_count)))
+                                if count_version:
+                                    count_version_buffer += text.simple_loop.replace("YYY", for_read).replace("XXX", str(child_count))
                             else: # child_count = -1
                                 count_name_str = child.attrib["count"][6:]
                                 read_source.write("(*dummy)->" + child.attrib["name"] + " = " +alloc+"(sizeof(" + type_resolver(child, self.def_elems + self.read_elems)  + ")*" + "(*dummy)->" + get_node_name(count_name_str, elem) + ");\n")
                                 read_source.write(text.c_void_manager_proto.replace("XXX", "(*dummy)->" + child.attrib["name"]));
                                 read_source.write("if (" + "(*dummy)->" + get_node_name(count_name_str, elem) + ")\n")
-                                read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "(*dummy)->" + get_node_name(count_name_str, elem)))
+                                if count_version:
+                                    count_version_buffer += "(*dummy)->" + child.attrib["name"] + " = " +alloc+"(sizeof(" + type_resolver(child, self.def_elems + self.read_elems)  + ")*" + "(*dummy)->" + get_node_name(count_name_str, elem) + ");\n"
+                                    count_version_buffer += text.c_void_manager_proto.replace("XXX", "(*dummy)->" + child.attrib["name"])
+                                    count_version_buffer += "if (" + "(*dummy)->" + get_node_name(count_name_str, elem) + ")\n"
+                                if "sizeconst" in child.attrib:
+                                    if child.attrib["sizeconst"] == "end":
+                                        read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "(*dummy)->" + get_node_name(count_name_str, elem) + "- agg_b_count"))
+                                else:
+                                    read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "(*dummy)->" + get_node_name(count_name_str, elem)))
                 else:
                     pass
             # if not aggregate
@@ -450,14 +511,23 @@ class CodeGen(object):
                 read_source.write("*dummy = "+alloc+"(sizeof(" + elem.attrib["name"] + "));\n")
                 read_source.write(text.c_void_manager_proto.replace("XXX", "*dummy"));
                 read_source.write(text.c_read_gen.replace("XXX", "(*dummy)->" + elem.attrib["name"]).replace("YYY", type_resolver(elem, self.def_elems)))
+            if "sizeconst" in child.attrib:
+                read_source.write("agg_b_count=0;\n")
+            if count_version:
+                count_version_buffer += "return *dummy;\n"
+                count_version_buffer += text.c_function_close + "\n"
             read_source.write("return *dummy;\n")
             read_source.write(text.c_function_close + "\n")
+            if count_version:
+                read_source.write(count_version_buffer)
         read_source_header = open(self.argparser.args.outdir + "/read.h", "w")
         read_source_header.write("#ifndef FT_READ_H\n#define FT_READ_H\n")
         read_source_header.write('#ifdef __cplusplus\nextern "C" {\n#endif\n')
         read_source_header.write('#include "./structs.h"\n')
         for elem in self.def_elems + self.read_elems:
             read_source_header.write(static + inline + text.c_read_elem_sig_h.replace("YYY", elem.attrib["name"]).replace("XXX", elem.attrib["name"]))
+            if "countversion" in elem.attrib:
+                read_source_header.write(static + inline + text.c_read_elem_sig_h_c.replace("YYY", elem.attrib["name"]).replace("XXX", elem.attrib["name"]))
         read_source_header.write('#ifdef __cplusplus\n}\n#endif\n')
         read_source_header.write("#endif //end of header guard\n\n")
 

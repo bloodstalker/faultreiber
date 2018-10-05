@@ -30,7 +30,7 @@ int main (int argc, char** argv) {
           }
       }
   }
-  int wasm = open("./test.wasm", O_RDONLY);
+  int wasm = open("./read.wasm", O_RDONLY);
   wasm_lib_ret_t* lib_ret = read_aggr_wasm(wasm);
   printf("finished reading\n");
 
@@ -60,6 +60,9 @@ int main (int argc, char** argv) {
     printf("kind:%d\n", lib_ret->obj->W_Import_Section_container->entries[i]->kind);
     if (lib_ret->obj->W_Import_Section_container->entries[i]->kind == 0)
       printf("type:%d\n", lib_ret->obj->W_Import_Section_container->entries[i]->kind);
+    else if (lib_ret->obj->W_Import_Section_container->entries[i]->kind == 2) {
+      //printf("type:%d\n", lib_ret->obj->W_Import_Section_container->entries[i]->type->resizable_limit->flags);
+    }
     printf("\n");
   }
   printf("function_section_id:%d\n", lib_ret->obj->W_Function_Section_container->id);
@@ -68,6 +71,7 @@ int main (int argc, char** argv) {
   for (int i = 0; i < lib_ret->obj->W_Function_Section_container->count; ++i)
     printf("type:%d\n", lib_ret->obj->W_Function_Section_container->types[i]);
 
+  if (lib_ret->obj->W_Table_Section_container != NULL) {
   printf("table_section_id:%d\n", lib_ret->obj->W_Table_Section_container->id);
   printf("table_section_payloadlength:%d\n", lib_ret->obj->W_Table_Section_container->payloadlength);
   printf("table_section_count:%d\n", lib_ret->obj->W_Table_Section_container->count);
@@ -77,15 +81,19 @@ int main (int argc, char** argv) {
     printf("rl_initial:%d\n", lib_ret->obj->W_Table_Section_container->entries[i]->resizable_limit->initial);
     printf("rl_maximum:%d\n", lib_ret->obj->W_Table_Section_container->entries[i]->resizable_limit->maximum);
   }
+  }
 
+  if (lib_ret->obj->W_Memory_Section_container != NULL) {
   printf("memory_section_id:%d\n", lib_ret->obj->W_Memory_Section_container->id);
   printf("memory_section_payload_length:%d\n", lib_ret->obj->W_Memory_Section_container->payloadlength);
   printf("rl_flags:%d\n", lib_ret->obj->W_Memory_Section_container->entries->resizable_limit->flags);
   printf("rl_initial:%d\n", lib_ret->obj->W_Memory_Section_container->entries->resizable_limit->initial);
   printf("rl_maximum:%d\n", lib_ret->obj->W_Memory_Section_container->entries->resizable_limit->maximum);
+  }
 
   if (lib_ret->obj->W_Global_Section_container == NULL) printf("global section doesnt exist.\n");
 
+  if (lib_ret->obj->W_Export_Section_container != NULL) { 
   printf("export_section_id:%d\n", lib_ret->obj->W_Export_Section_container->id);
   printf("export_section_payloadlength:%d\n", lib_ret->obj->W_Export_Section_container->payloadlength);
   printf("entry count:%d\n", lib_ret->obj->W_Export_Section_container->count);
@@ -96,9 +104,11 @@ int main (int argc, char** argv) {
     printf("kind:%d\n", lib_ret->obj->W_Export_Section_container->entries[i]->kind);
     printf("index:%d\n", lib_ret->obj->W_Export_Section_container->entries[i]->index);
   }
+  }
 
   if (lib_ret->obj->W_Start_Section_container == NULL) printf("start section doesnt exist.\n");
 
+  if (lib_ret->obj->W_Element_Section_container != NULL) { 
   printf("element_seciton_id:%d\n", lib_ret->obj->W_Element_Section_container->id);
   printf("element_section_payloadlength:%d\n", lib_ret->obj->W_Element_Section_container->payloadlength);
   printf("entry count:%d\n", lib_ret->obj->W_Element_Section_container->count);
@@ -113,7 +123,9 @@ int main (int argc, char** argv) {
       printf("elems:%d\n", lib_ret->obj->W_Element_Section_container->entries[i]->elems[j]);
     }
   }
+  }
 
+  if (lib_ret->obj->W_Code_Section_container != NULL) { 
   printf("code_section_id:%d\n", lib_ret->obj->W_Code_Section_container->id);
   printf("code_section_payloadlength:%d\n", lib_ret->obj->W_Code_Section_container->payloadlength);
   printf("count:%d\n", lib_ret->obj->W_Code_Section_container->count);
@@ -133,7 +145,9 @@ int main (int argc, char** argv) {
     }
     printf("\n");
   }
+  }
 
+  if (lib_ret->obj->W_Data_Section_container != NULL) { 
   printf("data_section_id:%d\n", lib_ret->obj->W_Data_Section_container->id);
   printf("data_section_payloadlength:%d\n", lib_ret->obj->W_Data_Section_container->payloadlength);
   printf("data seg count:%d\n", lib_ret->obj->W_Data_Section_container->count);
@@ -156,6 +170,7 @@ int main (int argc, char** argv) {
       j++;
     }
     printf("\n");
+  }
   }
 #endif
 
