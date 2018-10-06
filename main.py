@@ -305,14 +305,14 @@ class CodeGen(object):
                 dummy_string += ", " + elem.attrib["name"] + "*"  + " dummy_" + elem.attrib["name"]
                 read_source.write(static + inline + text.c_read_elem_sig.replace("YYY", elem.attrib["name"]).replace("XXX", elem.attrib["name"]+pointer))
                 read_source.write("*dummy = "+alloc+"(sizeof(" + elem.attrib["name"] + "));\n")
-                read_source.write("uint64_t b_count;\n")
+                read_source.write("uint64_t b_count = 0;\n")
                 if count_version:
                     count_version_buffer = static + inline + text.c_read_elem_sig_c.replace("YYY", elem.attrib["name"]).replace("XXX", elem.attrib["name"]+pointer)
                     count_version_buffer += "*dummy = "+alloc+"(sizeof(" + elem.attrib["name"] + "));\n"
-                    count_version_buffer += "uint64_t b_count;\n"
+                    count_version_buffer += "uint64_t b_count = 0;\n"
                 for sub in elem:
                     if "sizeconst" in sub.attrib:
-                        read_source.write("uint64_t agg_b_count;\n")
+                        read_source.write("uint64_t agg_b_count = 0;\n")
                         break
                 read_source.write(text.c_void_manager_proto.replace("XXX", "(*dummy)"));
                 if count_version: count_version_buffer += text.c_void_manager_proto.replace("XXX", "(*dummy)")
