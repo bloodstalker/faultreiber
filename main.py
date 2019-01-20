@@ -594,7 +594,10 @@ class CodeGen(object):
         #void_source_h.write(self.argparser.args.name + "_obj_t* obj;\n")
         void_source_h.write("typedef struct {\n")
         void_source_h.write(self.argparser.args.name + "_obj_t* obj;\n")
-        void_source_h.write("void** void_train;\n")
+        if self.argparser.args.luaalloc:
+            pass
+        else:
+            void_source_h.write("void** void_train;\n")
         void_source_h.write("uint64_t current_void_size;\n")
         void_source_h.write("uint64_t current_void_count;\n")
         void_source_h.write("}" + self.argparser.args.name + "_lib_ret_t;\n")
@@ -638,7 +641,10 @@ class CodeGen(object):
                 count_int = 0
                 count_void = 0
         #void_source.write("}\n")
-        void_source.write(self.argparser.args.name + "_lib_ret_t* read_aggr_"+self.argparser.args.name+"(int _fd) {\n")
+        if self.argparser.args.luaalloc:
+            void_source.write(self.argparser.args.name + "_lib_ret_t* read_aggr_"+self.argparser.args.name+"(int _fd, lua_State* __ls) {\n")
+        else:
+            void_source.write(self.argparser.args.name + "_lib_ret_t* read_aggr_"+self.argparser.args.name+"(int _fd) {\n")
         void_source.write("register " + self.argparser.args.name + "_lib_ret_t* lib_ret = "+alloc+"(sizeof("+self.argparser.args.name+"_lib_ret_t"+"));\n")
         void_source.write("lib_ret->obj = "+alloc+"(sizeof("+self.argparser.args.name+"_obj_t"+"));\n")
         for elem in self.read_elems:
@@ -655,7 +661,10 @@ class CodeGen(object):
         agg_source_h = open(self.aggregate_source_h, "a")
         #print(self.argparser.args.name)
         #agg_source.write('#include "aggregate.h"\n')
-        agg_source_h.write(self.argparser.args.name + "_lib_ret_t* read_aggr_"+self.argparser.args.name+"(int _fd);\n")
+        if self.argparser.args.luaalloc:
+            agg_source_h.write(self.argparser.args.name + "_lib_ret_t* read_aggr_"+self.argparser.args.name+"(int _fd, lua_State* __ls);\n")
+        else:
+            agg_source_h.write(self.argparser.args.name + "_lib_ret_t* read_aggr_"+self.argparser.args.name+"(int _fd);\n")
         agg_source.write("uint8_t eof = 0U;")
         agg_source.write("lib_ret->current_void_count = 0;\n")
         agg_source.write("lib_ret->current_void_size = 0;\n")
@@ -840,16 +849,8 @@ class CodeGen(object):
         self.read_xml()
         self.gen_reader_funcs(alloc)
         self.gen_struct_header_xml()
-        if self.argparser.args.luaalloc:
-            pass
-        else:
-            self.gen_void_train(alloc)
         self.gen_void_train(alloc)
         self.gen_aggregate_read()
-        if self.argparser.args.luaalloc:
-            pass
-        else:
-            self.gen_release()
         self.gen_release()
         #self.gen_return()
 
