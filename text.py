@@ -131,7 +131,7 @@ void void_manager(void* ptr, void*** void_train, uint64_t* current_void_size, ui
     c_reserve_void_ptr = "malloc(XXX)"
 
     ft_calloc_def="#define ft_calloc(X1) calloc(X1, 1)\n"
-    ft_luanewuserdata_def="#define ft_luanewuserdata(X1) lua_newuserdata(__ls, X1)\n"
+    ft_luanewuserdata_def="#define ft_lua_newuserdata(X1) lua_newuserdata(__ls, X1)\n"
     lua_udata_regindex = '''
     luaL_getmetatable(__ls, "XXX");
     lua_setmetatable(__ls, -2);
