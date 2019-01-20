@@ -286,7 +286,7 @@ class CodeGen(object):
         if self.argparser.args.luaalloc:
             read_source.write('#include "'+self.argparser.args.luaheaders+'/lua.h"\n')
             read_source.write('#include "'+self.argparser.args.luaheaders+'/lualib.h"\n')
-            read_source.write('#include "'+self.argparser.args.luaheaders+'/luaxlib.h"\n')
+            read_source.write('#include "'+self.argparser.args.luaheaders+'/lauxlib.h"\n')
         read_source.write('#include "./read.h"\n')
         read_source.write('#include "./structs.h"\n\n')
         if self.argparser.args.calloc: read_source.write(text.ft_calloc_def)
@@ -557,7 +557,7 @@ class CodeGen(object):
         if self.argparser.args.luaalloc:
             read_source_header.write('#include "'+self.argparser.args.luaheaders+'/lua.h"\n')
             read_source_header.write('#include "'+self.argparser.args.luaheaders+'/lualib.h"\n')
-            read_source_header.write('#include "'+self.argparser.args.luaheaders+'/luaxlib.h"\n')
+            read_source_header.write('#include "'+self.argparser.args.luaheaders+'/lauxlib.h"\n')
         for elem in self.def_elems + self.read_elems:
             read_source_header.write(static + inline + text.c_read_elem_sig_h.replace("YYY", elem.attrib["name"]).replace("XXX", elem.attrib["name"]).replace("ZZZ", read_sig_zzz))
             if "countversion" in elem.attrib:
@@ -575,7 +575,7 @@ class CodeGen(object):
         if self.argparser.args.luaalloc:
             void_source.write('#include "'+self.argparser.args.luaheaders+'/lua.h"\n')
             void_source.write('#include "'+self.argparser.args.luaheaders+'/lualib.h"\n')
-            void_source.write('#include "'+self.argparser.args.luaheaders+'/luaxlib.h"\n')
+            void_source.write('#include "'+self.argparser.args.luaheaders+'/lauxlib.h"\n')
         void_source.write('#include "./structs.h"\n')
         void_source.write('#include "./read.h"\n')
         void_source.write("#include <stdlib.h>\n")
@@ -591,7 +591,7 @@ class CodeGen(object):
         if self.argparser.args.luaalloc:
             void_source_h.write('#include "'+self.argparser.args.luaheaders+'/lua.h"\n')
             void_source_h.write('#include "'+self.argparser.args.luaheaders+'/lualib.h"\n')
-            void_source_h.write('#include "'+self.argparser.args.luaheaders+'/luaxlib.h"\n')
+            void_source_h.write('#include "'+self.argparser.args.luaheaders+'/lauxlib.h"\n')
         # generating the extern declarations and definitions
         void_source_h.write("typedef struct {\n")
         for elem in self.read_elems:
