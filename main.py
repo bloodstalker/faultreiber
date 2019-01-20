@@ -362,12 +362,12 @@ class CodeGen(object):
                                     else: read_source.write(text.lua_udata_regindex.replace("XXX", elem.attrib["name"]).replace("YYY", "(*dummy)"))
                                     self.malloc_list.append(C_Obj(ref_node.attrib["name"], [elem.tag, child.tag]))
                                     if child_count == 1:
-                                        for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + cond.attrib["name"]).replace("ZZZ", "void_train") + ";\n"
+                                        for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + cond.attrib["name"]).replace("ZZZ", "void_train").replace("WWW", read_sig_zzz) + ";\n"
                                         read_source.write(for_read)
                                         if count_version:
                                             count_version_buffer += for_read
                                     elif child_count > 1:
-                                        for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + cond.attrib["name"] + "[i]").replace("ZZZ", "void_train") + ";\n"
+                                        for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + cond.attrib["name"] + "[i]").replace("ZZZ", "void_train").replace("WWW", read_sig_zzz) + ";\n"
                                         if count_version:
                                             count_version_buffer += for_read
                                         read_source.write(for_read)
@@ -377,7 +377,7 @@ class CodeGen(object):
                                         read_source.write("(*dummy)->" + cond.attrib["name"] + " = " + alloc+"(sizeof(void*)*" + "(*dummy)->" + get_node_name(count_name_str, child) + ");\n")
                                         if not lua_udata_set: read_source.write(text.c_void_manager_proto.replace("XXX", "(*dummy)->" + cond.attri["name"]));
                                         self.malloc_list.append(C_Obj("sizeof(void*)*(*dummy)->"+get_node_name(count_name_str, child), [elem.attrib["name"], child.attrib["name"], cond.arrtib["name"]]))
-                                        for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + cond.attrib["name"] + "[i]").replace("ZZZ", "void_train") + ";\n"
+                                        for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + cond.attrib["name"] + "[i]").replace("ZZZ", "void_train").replace("WWW", read_sig_zzz) + ";\n"
                                         read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "(*dummy)->" + get_node_name(count_name_str, child)))
                                     read_source.write("}\n")
                                     if count_version:
@@ -426,18 +426,18 @@ class CodeGen(object):
                             if child_count == 1:
                                 if "sizeconst" in child.attrib:
                                     if "sizeconst" != "end":
-                                        for_read = text.c_read_elem_sig_2_c.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"]).replace("ZZZ", "void_train") + ";\n"
+                                        for_read = text.c_read_elem_sig_2_c.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"]).replace("ZZZ", "void_train").replace("WWW", read_sig_zzz) + ";\n"
                                 else:
-                                    for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"]).replace("ZZZ", "void_train") + ";\n"
+                                    for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"]).replace("ZZZ", "void_train").replace("WWW", read_sig_zzz) + ";\n"
                                 read_source.write("(*dummy)->" + child.attrib["name"] + "=" + for_read)
                                 if count_version:
                                     count_version_buffer += "(*dummy)->" + child.attrib["name"] + "=" + for_read
                             elif child_count > 1:
                                 if "sizeconst" in child.attrib:
                                     if "sizeconst" != "end":
-                                        for_read = text.c_read_elem_sig_2_c.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", "void_train") + ";\n"
+                                        for_read = text.c_read_elem_sig_2_c.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", "void_train").replace("WWW", read_sig_zzz) + ";\n"
                                 else:
-                                    for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", "void_train") + ";\n"
+                                    for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", "void_train").replace("WWW", read_sig_zzz) + ";\n"
                                 read_source.write("(*dummy)->" + child.attrib["name"] + "=" + for_read)
                                 if count_version:
                                     count_version_buffer += "(*dummy)->" + child.attrib["name"] + "=" + for_read
@@ -448,9 +448,9 @@ class CodeGen(object):
                                 if not lua_udata_set: read_source.write(text.c_void_manager_proto.replace("XXX", "(*dummy)->" + child.attrib["name"]));
                                 if "sizeconst" in child.attrib:
                                     if "sizeconst" != "end":
-                                        for_read = text.c_read_elem_sig_2_c.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", "void_train") + ";\n"
+                                        for_read = text.c_read_elem_sig_2_c.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", "void_train").replace("WWW", read_sig_zzz) + ";\n"
                                 else:
-                                    for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", "void_train") + ";\n"
+                                    for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", "void_train").replace("WWW", read_sig_zzz) + ";\n"
                                 read_source.write(text.simple_loop.replace("YYY", "(*dummy)->" + child.attrib["name"] + "[i]=" + for_read).replace("XXX", "(*dummy)->" + get_node_name(count_name_str, elem)))
                                 if count_version:
                                     count_version_buffer += text.simple_loop.replace("YYY", "(*dummy)->" + child.attrib["name"] + "[i]=" + for_read).replace("XXX", "(*dummy)->" + get_node_name(count_name_str, elem))
@@ -542,9 +542,13 @@ class CodeGen(object):
             if count_version:
                 read_source.write(count_version_buffer)
         read_source_header = open(self.argparser.args.outdir + "/read.h", "w")
+        read_source_header.write("\n// automatically generated by faultrieber\n")
+        read_source_header.write("// " + self.dnt + "\n\n")
         read_source_header.write("#ifndef FT_READ_H\n#define FT_READ_H\n")
         read_source_header.write('#ifdef __cplusplus\nextern "C" {\n#endif\n')
         read_source_header.write('#include "./structs.h"\n')
+        if self.argparser.args.luaalloc:
+            read_source_header.write('#include "'+self.argparser.args.luaheaders+'"\n')
         for elem in self.def_elems + self.read_elems:
             read_source_header.write(static + inline + text.c_read_elem_sig_h.replace("YYY", elem.attrib["name"]).replace("XXX", elem.attrib["name"]).replace("ZZZ", read_sig_zzz))
             if "countversion" in elem.attrib:
