@@ -708,7 +708,10 @@ class CodeGen(object):
                     agg_source.write("lib_ret->obj->" + elem.attrib["name"] + "_container = realloc(lib_ret->obj->"+elem.attrib["name"]+"_container,"+"sizeof("+elem.attrib["name"]+")*("+elem.attrib["name"]+"_agg_count"+" +1));\n")
                 else:
                     agg_source.write("lib_ret->obj->" + elem.attrib["name"] + "_container = realloc(lib_ret->obj->"+elem.attrib["name"]+"_container,"+"sizeof("+elem.attrib["name"]+")*("+elem.attrib["name"]+"_agg_count"+" +1));\n")
-                agg_source.write("lib_ret->obj->"+elem.attrib["name"] + "_container["+elem.attrib["name"]+"_agg_count"+"] = " + "ft_read_" + elem.attrib["name"] + "(_fd, &lib_ret->obj->" + elem.attrib["name"] + "_container["+elem.attrib["name"]+"_agg_count"+"], "  + "&lib_ret->void_train, &lib_ret->current_void_size, &lib_ret->current_void_count);\n")
+                if self.argparser.args.luaalloc:
+                    agg_source.write("lib_ret->obj->"+elem.attrib["name"] + "_container["+elem.attrib["name"]+"_agg_count"+"] = " + "ft_read_" + elem.attrib["name"] + "(_fd, &lib_ret->obj->" + elem.attrib["name"] + "_container["+elem.attrib["name"]+"_agg_count"+"], "  + "__ls, &lib_ret->current_void_size, &lib_ret->current_void_count);\n")
+                else:
+                    agg_source.write("lib_ret->obj->"+elem.attrib["name"] + "_container["+elem.attrib["name"]+"_agg_count"+"] = " + "ft_read_" + elem.attrib["name"] + "(_fd, &lib_ret->obj->" + elem.attrib["name"] + "_container["+elem.attrib["name"]+"_agg_count"+"], "  + "&lib_ret->void_train, &lib_ret->current_void_size, &lib_ret->current_void_count);\n")
                 agg_source.write(elem.attrib["name"] + "_agg_count++;\n")
             if "unordered" in elem.attrib: agg_source.write("}\n")
 
