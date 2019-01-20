@@ -721,12 +721,15 @@ class CodeGen(object):
     def gen_release(self):
         agg_source = open(self.aggregate_source, "a")
         agg_source_h = open(self.aggregate_source_h, "a")
-        agg_source_h.write("void release_all_"+self.argparser.args.name+"(void** void_train, uint64_t current_void_count);\n")
-        agg_source.write("void release_all_"+self.argparser.args.name+"(void** void_train, uint64_t current_void_count) {\n")
-        agg_source.write("for (int i=current_void_count-1;i>=0;--i) {\n")
-        agg_source.write("free(void_train[i]);\n}\n")
-        agg_source.write("free(void_train);\n")
-        agg_source.write("}\n")
+        if self.argparser.args.luaalloc:
+            pass
+        else:
+            agg_source_h.write("void release_all_"+self.argparser.args.name+"(void** void_train, uint64_t current_void_count);\n")
+            agg_source.write("void release_all_"+self.argparser.args.name+"(void** void_train, uint64_t current_void_count) {\n")
+            agg_source.write("for (int i=current_void_count-1;i>=0;--i) {\n")
+            agg_source.write("free(void_train[i]);\n}\n")
+            agg_source.write("free(void_train);\n")
+            agg_source.write("}\n")
         agg_source_h.write('#ifdef __cplusplus\n}\n#endif\n')
         agg_source_h.write("#endif //end of header guard\n\n")
 
