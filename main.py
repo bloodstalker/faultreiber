@@ -290,8 +290,13 @@ class CodeGen(object):
         if self.argparser.args.calloc: read_source.write(text.ft_calloc_def)
         if self.argparser.args.luaalloc: read_source.write(text.ft_luanewuserdata_def)
         read_sig_zzz = str()
-        if self.argparser.args.luaalloc: read_sig_zzz = ", lua_State* __ls"
-        else: read_sig_zzz = ""
+        read_proto_zzz = str()
+        if self.argparser.args.luaalloc:
+            read_sig_zzz = "lua_State* __ls"
+            read_proto_zzz = "__ls"
+        else:
+            read_sig_zzz = "void*** void_train"
+            read_proto_zzz = "void_train"
         inline = "inline " if self.argparser.args.inline else ""
         static = "static " if self.argparser.args.static else ""
         for elem in self.def_elems + self.read_elems:
@@ -362,12 +367,12 @@ class CodeGen(object):
                                     else: read_source.write(text.lua_udata_regindex.replace("XXX", elem.attrib["name"]).replace("YYY", "(*dummy)"))
                                     self.malloc_list.append(C_Obj(ref_node.attrib["name"], [elem.tag, child.tag]))
                                     if child_count == 1:
-                                        for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + cond.attrib["name"]).replace("ZZZ", "void_train").replace("WWW", read_sig_zzz) + ";\n"
+                                        for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + cond.attrib["name"]).replace("ZZZ", read_proto_zzz) + ";\n"
                                         read_source.write(for_read)
                                         if count_version:
                                             count_version_buffer += for_read
                                     elif child_count > 1:
-                                        for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + cond.attrib["name"] + "[i]").replace("ZZZ", "void_train").replace("WWW", read_sig_zzz) + ";\n"
+                                        for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + cond.attrib["name"] + "[i]").replace("ZZZ", read_proto_zzz) + ";\n"
                                         if count_version:
                                             count_version_buffer += for_read
                                         read_source.write(for_read)
@@ -377,7 +382,7 @@ class CodeGen(object):
                                         read_source.write("(*dummy)->" + cond.attrib["name"] + " = " + alloc+"(sizeof(void*)*" + "(*dummy)->" + get_node_name(count_name_str, child) + ");\n")
                                         if not lua_udata_set: read_source.write(text.c_void_manager_proto.replace("XXX", "(*dummy)->" + cond.attri["name"]));
                                         self.malloc_list.append(C_Obj("sizeof(void*)*(*dummy)->"+get_node_name(count_name_str, child), [elem.attrib["name"], child.attrib["name"], cond.arrtib["name"]]))
-                                        for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + cond.attrib["name"] + "[i]").replace("ZZZ", "void_train").replace("WWW", read_sig_zzz) + ";\n"
+                                        for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + cond.attrib["name"] + "[i]").replace("ZZZ", read_proto_zzz) + ";\n"
                                         read_source.write(text.simple_loop.replace("YYY", for_read).replace("XXX", "(*dummy)->" + get_node_name(count_name_str, child)))
                                     read_source.write("}\n")
                                     if count_version:
@@ -426,18 +431,18 @@ class CodeGen(object):
                             if child_count == 1:
                                 if "sizeconst" in child.attrib:
                                     if "sizeconst" != "end":
-                                        for_read = text.c_read_elem_sig_2_c.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"]).replace("ZZZ", "void_train").replace("WWW", read_sig_zzz) + ";\n"
+                                        for_read = text.c_read_elem_sig_2_c.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"]).replace("ZZZ", read_proto_zzz) + ";\n"
                                 else:
-                                    for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"]).replace("ZZZ", "void_train").replace("WWW", read_sig_zzz) + ";\n"
+                                    for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"]).replace("ZZZ", read_proto_zzz) + ";\n"
                                 read_source.write("(*dummy)->" + child.attrib["name"] + "=" + for_read)
                                 if count_version:
                                     count_version_buffer += "(*dummy)->" + child.attrib["name"] + "=" + for_read
                             elif child_count > 1:
                                 if "sizeconst" in child.attrib:
                                     if "sizeconst" != "end":
-                                        for_read = text.c_read_elem_sig_2_c.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", "void_train").replace("WWW", read_sig_zzz) + ";\n"
+                                        for_read = text.c_read_elem_sig_2_c.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", read_proto_zzz) + ";\n"
                                 else:
-                                    for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", "void_train").replace("WWW", read_sig_zzz) + ";\n"
+                                    for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", read_proto_zzz) + ";\n"
                                 read_source.write("(*dummy)->" + child.attrib["name"] + "=" + for_read)
                                 if count_version:
                                     count_version_buffer += "(*dummy)->" + child.attrib["name"] + "=" + for_read
@@ -448,9 +453,9 @@ class CodeGen(object):
                                 if not lua_udata_set: read_source.write(text.c_void_manager_proto.replace("XXX", "(*dummy)->" + child.attrib["name"]));
                                 if "sizeconst" in child.attrib:
                                     if "sizeconst" != "end":
-                                        for_read = text.c_read_elem_sig_2_c.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", "void_train").replace("WWW", read_sig_zzz) + ";\n"
+                                        for_read = text.c_read_elem_sig_2_c.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", read_proto_zzz)+ ";\n"
                                 else:
-                                    for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", "void_train").replace("WWW", read_sig_zzz) + ";\n"
+                                    for_read = text.c_read_elem_sig_2.replace("XXX", ref_node_name).replace("YYY", "&(*dummy)->" + child.attrib["name"] + "[i]").replace("ZZZ", read_proto_zzz) + ";\n"
                                 read_source.write(text.simple_loop.replace("YYY", "(*dummy)->" + child.attrib["name"] + "[i]=" + for_read).replace("XXX", "(*dummy)->" + get_node_name(count_name_str, elem)))
                                 if count_version:
                                     count_version_buffer += text.simple_loop.replace("YYY", "(*dummy)->" + child.attrib["name"] + "[i]=" + for_read).replace("XXX", "(*dummy)->" + get_node_name(count_name_str, elem))
@@ -681,9 +686,15 @@ class CodeGen(object):
                             agg_source.write("lseek(_fd, -sizeof(" + sign_type + "), SEEK_CUR);\n")
                             agg_source.write("if (" + sign_name + "==" + child.text + "){\n")
             if elem.attrib["count"] != "*":
-                agg_source.write("lib_ret->obj->"+elem.attrib["name"] + "_container = " + "ft_read_" + elem.attrib["name"] + "(_fd, &lib_ret->obj->" + elem.attrib["name"] + "_container, "  + "&lib_ret->void_train, &lib_ret->current_void_size, &lib_ret->current_void_count);\n")
+                if self.argparser.args.luaalloc:
+                    agg_source.write("lib_ret->obj->"+elem.attrib["name"] + "_container = " + "ft_read_" + elem.attrib["name"] + "(_fd, &lib_ret->obj->" + elem.attrib["name"] + "_container, "  + "__ls, &lib_ret->current_void_size, &lib_ret->current_void_count);\n")
+                else:
+                    agg_source.write("lib_ret->obj->"+elem.attrib["name"] + "_container = " + "ft_read_" + elem.attrib["name"] + "(_fd, &lib_ret->obj->" + elem.attrib["name"] + "_container, "  + "&lib_ret->void_train, &lib_ret->current_void_size, &lib_ret->current_void_count);\n")
             else:
-                agg_source.write("lib_ret->obj->" + elem.attrib["name"] + "_container = realloc(lib_ret->obj->"+elem.attrib["name"]+"_container,"+"sizeof("+elem.attrib["name"]+")*("+elem.attrib["name"]+"_agg_count"+" +1));\n")
+                if self.argparser.args.luaalloc:
+                    agg_source.write("lib_ret->obj->" + elem.attrib["name"] + "_container = realloc(lib_ret->obj->"+elem.attrib["name"]+"_container,"+"sizeof("+elem.attrib["name"]+")*("+elem.attrib["name"]+"_agg_count"+" +1));\n")
+                else:
+                    agg_source.write("lib_ret->obj->" + elem.attrib["name"] + "_container = realloc(lib_ret->obj->"+elem.attrib["name"]+"_container,"+"sizeof("+elem.attrib["name"]+")*("+elem.attrib["name"]+"_agg_count"+" +1));\n")
                 agg_source.write("lib_ret->obj->"+elem.attrib["name"] + "_container["+elem.attrib["name"]+"_agg_count"+"] = " + "ft_read_" + elem.attrib["name"] + "(_fd, &lib_ret->obj->" + elem.attrib["name"] + "_container["+elem.attrib["name"]+"_agg_count"+"], "  + "&lib_ret->void_train, &lib_ret->current_void_size, &lib_ret->current_void_count);\n")
                 agg_source.write(elem.attrib["name"] + "_agg_count++;\n")
             if "unordered" in elem.attrib: agg_source.write("}\n")
@@ -821,7 +832,7 @@ class CodeGen(object):
     def run(self):
         alloc = str()
         if self.argparser.args.calloc: alloc = "ft_calloc"
-        if self.argparser.args.luaalloc: alloc = "ft_lua_newuserdata"
+        elif self.argparser.args.luaalloc: alloc = "ft_lua_newuserdata"
         else: alloc = "malloc"
         self.init()
         self.init_hook()
@@ -833,7 +844,12 @@ class CodeGen(object):
             pass
         else:
             self.gen_void_train(alloc)
+        self.gen_void_train(alloc)
         self.gen_aggregate_read()
+        if self.argparser.args.luaalloc:
+            pass
+        else:
+            self.gen_release()
         self.gen_release()
         #self.gen_return()
 
