@@ -1,4 +1,6 @@
 # faultreiber
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fbloodstalker%2Ffaultreiber.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fbloodstalker%2Ffaultreiber?ref=badge_shield)
+
 `faultreiber` generates a parser library in C for a structured (binary) file format. The input is an XML file that describes the format.<br/>
 The C source code will be in the form of multiple source and header files.<br/>
 The headers have header guards and are already `extern "C"`ed.<br/>
@@ -125,3 +127,6 @@ The list of the projects that use faulreiber:<br/>
 
 ## License
 `faultreiber` is provided under MIT. I'm assuming(I'm not a lawyer) the generated code is considered "derived work". If it is, then the generated code will also fall under MIT.<br/>
+
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fbloodstalker%2Ffaultreiber.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fbloodstalker%2Ffaultreiber?ref=badge_large)
