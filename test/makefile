@@ -6,7 +6,8 @@ CC?=clang
 CC_FLAGS=-fpic
 CC_EXTRA?=
 CTAGS_I_PATH?=./
-LD_FLAGS=
+LIB_LUA=./lua/liblua.a
+LD_FLAGS= -lm -ldl -L ./lua
 EXTRA_LD_FLAGS?=
 ADD_SANITIZERS_CC= -g -fsanitize=address -fno-omit-frame-pointer
 ADD_SANITIZERS_LD= -g -fsanitize=address
@@ -67,6 +68,9 @@ depend:.depend
 
 -include ./.depend
 
+$(LIB_LUA):
+	$(MAKE) -C ./lua linux
+
 .c.o:
 	$(CC) $(CC_FLAGS) -c $< -o $@
 
@@ -76,13 +80,13 @@ depend:.depend
 %.ocov:%.c
 	$(CC) $(CC_FLAGS) $(COV_CC) -c $< -o $@
 
-$(TARGET): $(TARGET).o read.o aggregate.o structs.o
+$(TARGET): $(TARGET).o read.o aggregate.o structs.o $(LIB_LUA) ../out/wasm_tables.a
 	$(CC) $^ $(LD_FLAGS) -o $@
 
-$(TARGET)-static: $(TARGET).o read.o aggregate.o structs.o
+$(TARGET)-static: $(TARGET).o read.o aggregate.o structs.o $(LIB_LUA)
 	$(CC) $^ $(LD_FLAGS) -static -o $@
 
-$(TARGET)-dbg: $(TARGET).odbg read.odbg aggregate.odbg structs.odbg
+$(TARGET)-dbg: $(TARGET).odbg read.odbg aggregate.odbg structs.odbg $(LIB_LUA) ../out/wasm_tables.adbg
 	$(CC) $^ $(LD_FLAGS) -g -o $@
 
 $(TARGET)-cov: $(TARGET).ocov read.o aggregate.o structs.o
@@ -115,7 +119,7 @@ tags:$(SRCS)
 $(TARGET).so: $(TARGET).o read.o aggregate.o structs.o
 	$(CC) $^ $(LD_FLAGS) -shared -o $@
 
-$(TARGET).a: $(TARGET).o read.o aggregate.o structs.o
+$(TARGET).a: $(TARGET).o read.o aggregate.o structs.o $(LIB_LUA)
 	ar rcs $(TARGET).a $(TARGET).o
 
 valgrind: $(TARGET)

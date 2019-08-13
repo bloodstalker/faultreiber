@@ -10,6 +10,8 @@
 //#include "./read.h"
 #include "./aggregate.h"
 
+#define WASM
+
 
 #pragma weak main
 int main (int argc, char** argv) {
@@ -31,7 +33,9 @@ int main (int argc, char** argv) {
       }
   }
   int wasm = open("./read.wasm", O_RDONLY);
-  wasm_lib_ret_t* lib_ret = read_aggr_wasm(wasm);
+  lua_State* ls = luaL_newstate();
+  reg_tablegen_tables_wasm(ls);
+  wasm_lib_ret_t* lib_ret = read_aggr_wasm(wasm, ls);
   printf("finished reading\n");
 
 #if 1
@@ -174,6 +178,7 @@ int main (int argc, char** argv) {
   }
 #endif
 
+#if 0
   printf("sizeof magic:%d\n", sizeof(magic_number));
   printf("sizeof version:%d\n", sizeof(version));
   printf("current void count:%d\n", lib_ret->current_void_count);
@@ -185,6 +190,7 @@ int main (int argc, char** argv) {
   //free(lib_ret->void_train[2]);
   //free(lib_ret->void_train[1]);
   //free(lib_ret->void_train[0]);
+#endif
 #if 0
   for (int i = lib_ret->current_void_count - 1; i >= 0; --i) {
     printf("%d:0x%x ", i, lib_ret->void_train[i]);
@@ -193,7 +199,9 @@ int main (int argc, char** argv) {
   }
 #endif
   //free(lib_ret->void_train);
+#if 0
   free(lib_ret->obj);
   free(lib_ret);
+#endif
   return 0;
 }

@@ -1,0 +1,3 @@
+[submodule "luatablegen"]
+	path = luatablegen
+	url = https://github.com/bloodstalker/luatablegen
